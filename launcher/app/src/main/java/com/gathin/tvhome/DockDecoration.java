@@ -28,6 +28,16 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
     private final boolean evenPadding;
     /** The band's top and bottom the glass gradient was made for; it is remade when they move. */
     private float shaderTop = Float.NaN, shaderBottom = Float.NaN;
+    /** The light glass's gradient, top to bottom; Glass Home makes it whiter on a light background. */
+    private int glassTop = 0x24FFFFFF, glassBottom = 0x0DFFFFFF;
+
+    /** Glass Home: liquid glass that reads on this background (white and milky on a light one, a fine dark rim). */
+    void setGlassHome(boolean lightInk) {
+        glassTop = lightInk ? 0xBFFFFFFF : 0x2EFFFFFF;
+        glassBottom = lightInk ? 0x8CFFFFFF : 0x10FFFFFF;
+        edge.setColor(lightInk ? 0x1A000000 : 0x47FFFFFF);
+        shaderTop = Float.NaN;
+    }
 
     /**
      * @param translucent the cinematic shelf's band: the artwork and the glow show through it.
@@ -121,7 +131,7 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
         rect.bottom += namesRoom;
         if (lightGlass && (rect.top != shaderTop || rect.bottom != shaderBottom)) {
             // The pills' glass (pill_bg: white, 18% fading to 8%), a little fainter over this much larger area.
-            band.setShader(new LinearGradient(0, rect.top, 0, rect.bottom, 0x24FFFFFF, 0x0DFFFFFF,
+            band.setShader(new LinearGradient(0, rect.top, 0, rect.bottom, glassTop, glassBottom,
                     Shader.TileMode.CLAMP));
             shaderTop = rect.top;
             shaderBottom = rect.bottom;

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- AirPlay tile (app_banners): the AirPlay glyph in black on white, redrawn from the owner's 1200 x 1200 image.
+     The screen is an open rounded rectangle drawn as a 75-unit line with round ends; the triangle is filled and
+     outlined with a round join, which softens its corners as in the original. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp" android:height="180dp"
+    android:viewportWidth="320" android:viewportHeight="180">
+    <path android:fillColor="#FFF5F5F7" android:pathData="M0,0h320v180h-320z" />
+    <group android:translateX="82" android:translateY="12" android:scaleX="0.13" android:scaleY="0.13">
+        <path
+            android:strokeColor="#FF000000"
+            android:strokeWidth="75"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M350,850L250,850A100,100 0 0 1 150,750L150,350A100,100 0 0 1 250,250L950,250A100,100 0 0 1 1050,350L1050,750A100,100 0 0 1 950,850L850,850" />
+        <path
+            android:fillColor="#FF000000"
+            android:strokeColor="#FF000000"
+            android:strokeWidth="40"
+            android:strokeLineJoin="round"
+            android:pathData="M600,700L768,967L432,967Z" />
+    </group>
+</vector>

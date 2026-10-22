@@ -26,6 +26,8 @@ public class GlassView extends View {
     private int glowRgb = 0xFFFFFF;
     /** Glow strength: the white glow stays faint, a coloured one needs more alpha to read as warm light. */
     private int glowAlpha = 0x30;
+    /** Glass Home on a light background: the glow becomes a soft shadow and the rim a fine dark edge. */
+    private boolean onLight;
 
     public GlassView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -41,9 +43,19 @@ public class GlassView extends View {
         setLayerType(LAYER_TYPE_HARDWARE, null);
     }
 
+    /** Glass Home on a light background, where white glass would not show: a lifted tile's shadow instead. */
+    void setOnLight(boolean light) {
+        onLight = light;
+        setAccent(0);
+    }
+
     /** Tints the rim and the outer glow; 0 restores the plain white glass. */
     void setAccent(int argb) {
-        if (argb == 0) {
+        if (argb == 0 && onLight) {
+            glowRgb = 0x000000;
+            glowAlpha = 0x48;
+            rim.setColor(0x33000000);
+        } else if (argb == 0) {
             glowRgb = 0xFFFFFF;
             glowAlpha = 0x30;
             rim.setColor(0xCCFFFFFF);

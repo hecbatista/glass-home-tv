@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.SystemClock;
 import android.os.UserManager;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -48,8 +49,25 @@ public class HomeKeyService extends AccessibilityService {
 
     /** Waits for the user to unlock when Android binds this service at boot; null once the config is read. */
     private BroadcastReceiver unlockReceiver;
+    /**
+     * stock_home_redirect: Home pressed while the stock home screen is already in front changes no window, so the
+     * redirect never hears of it. Android 11 tells apps about the key through CLOSE_SYSTEM_DIALOGS, but Fire OS keeps
+     * that broadcast from third-party apps and sends its own, amazon.intent.action.HOME_PRESSED, instead.
+     */
+    private BroadcastReceiver homeKeyReceiver;
+    private static final String AMAZON_HOME_PRESSED = "amazon.intent.action.HOME_PRESSED";
     /** The stock launcher's HOME activities (stock_home_redirect), disabled ones included. */
     private final Set<String> stockHome = new HashSet<>();
+
+    /** Until when (uptime) the stock home screen may stay up: the Fire TV Home tile opened it on purpose. */
+    private static volatile long redirectPausedUntil;
+    /** Long enough for the stock launcher's windows to settle after it starts; Home after that comes back here. */
+    private static final long REDIRECT_PAUSE_MS = 3000;
+
+    /** The Fire TV Home tile is about to open the stock home screen (fire_home_tile). */
+    static void pauseRedirect() {
+        redirectPausedUntil = SystemClock.uptimeMillis() + REDIRECT_PAUSE_MS;
+    }
 
     @Override
     protected void onServiceConnected() {
@@ -87,6 +105,10 @@ public class HomeKeyService extends AccessibilityService {
     @Override
     public void onDestroy() {
         stopWaitingForUnlock();
+        if (homeKeyReceiver != null) {
+            unregisterReceiver(homeKeyReceiver);
+            homeKeyReceiver = null;
+        }
         super.onDestroy();
     }
 
@@ -108,6 +130,22 @@ public class HomeKeyService extends AccessibilityService {
             for (ResolveInfo ri : getPackageManager().queryIntentActivities(home, PackageManager.MATCH_DISABLED_COMPONENTS)) {
                 stockHome.add(ri.activityInfo.name);
             }
+        }
+        if (!stockHome.isEmpty() && homeKeyReceiver == null) {
+            homeKeyReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    String reason = intent.getStringExtra("reason");
+                    boolean home = AMAZON_HOME_PRESSED.equals(intent.getAction()) || "homekey".equals(reason);
+                    android.util.Log.i("HomeKeyService", "home key broadcast: " + intent.getAction() + " " + reason);
+                    if (!home || SystemClock.uptimeMillis() < redirectPausedUntil) return;
+                    startActivity(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).setPackage(getPackageName())
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED));
+                }
+            };
+            IntentFilter keys = new IntentFilter(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
+            keys.addAction(AMAZON_HOME_PRESSED);
+            registerReceiver(homeKeyReceiver, keys);
         }
         // home_key_service.xml subscribes to no events, so the redirect asks for window changes only when it is on.
         AccessibilityServiceInfo info = getServiceInfo();
@@ -170,6 +208,8 @@ public class HomeKeyService extends AccessibilityService {
         if (stockHome.isEmpty() || event.getEventType() != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return;
         CharSequence cls = event.getClassName();
         if (cls != null && stockHome.contains(cls.toString())) {
+            // The Fire TV Home tile asked for this screen: let it come up, and only send the TV back after that.
+            if (SystemClock.uptimeMillis() < redirectPausedUntil) return;
             startActivity(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).setPackage(getPackageName())
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED));
         }

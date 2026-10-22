@@ -158,6 +158,17 @@
 
         <!-- Screensaver: pick it in Settings, or `settings put secure screensaver_components
              com.gathin.tvhome/.ClockDream` over adb. -->
+        <!-- Glass Home's Now Playing panel (config now_playing): access to the media sessions, nothing else. -->
+        <service
+            android:name=".NowPlayingListener"
+            android:label="@string/now_playing"
+            android:exported="true"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
         <service
             android:name=".ClockDream"
             android:label="@string/dream_name"

@@ -20,6 +20,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.RadialGradient;
 import android.graphics.Rect;
@@ -66,6 +67,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.PopupWindow;
+import android.widget.TextClock;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -149,6 +151,17 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private boolean appGlow;
     /** config.xml glow_style: the shape setAmbient paints the glow mask in. */
     private String glowStyle;
+    /** Glass Home (config glass_home), and whether its background is light enough to need dark ink. */
+    private boolean glassHome, lightInk;
+    /** Glass Home's Now Playing panel (config now_playing), or null. */
+    private NowPlayingPanel nowPlaying;
+    /**
+     * Glass Home with rows_below_dock 0: the rows under the dock stay hidden while focus is on the dock or above it,
+     * and fade in once Down moves into them, so Home shows the dock alone.
+     */
+    private boolean hideRowsAtDock, gridRowsHidden = true;
+    /** Glass Home's Appearance button beside Settings, or null. */
+    private TextView btnAppearance;
     private ImageView heroArt;
     private static final float HERO_ART_ALPHA = 0.5f;
     /** Softened artwork per app (HeroArt, about 5 KB each), made the first time its dock tile is focused. */
@@ -379,6 +392,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
         root = findViewById(R.id.root);
         root.setBackgroundColor(cfg.backgroundColor);
+        glassHome = cfg.glassHome;
+        lightInk = glassHome && Appearance.isLight(cfg.backgroundColor);
         // root fills the window with an opaque colour (Config keeps background_color opaque), so the window's own
         // black under it is a second full-screen fill on every frame for nothing. The starting window still uses
         // the theme's background, so launch looks the same.
@@ -388,6 +403,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         sky.setIntensity(cfg.skyIntensity);
         glass = findViewById(R.id.glass);
         if (festive) glass.setAccent(festival.accentColor());
+        if (lightInk) glass.setOnLight(true);
         ambient = findViewById(R.id.ambient);
         // The glow is one bitmap, so its alpha can be applied while drawing it. Otherwise every frame of
         // a fade renders it into a full-screen offscreen buffer first.
@@ -406,6 +422,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         cinematic = cfg.cinematicHome;
         glowStyle = cfg.glowStyle;
         if (cinematic) setUpCinematicShelf();
+        else if (glassHome) setUpGlassShelf();
         // dock_title false: the name above the dock (and the cinematic lines under it) never shows; the glow
         // still follows the dock.
         if (!cfg.dockTitle) hero.setVisibility(View.GONE);
@@ -500,7 +517,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             public void onChildViewDetachedFromWindow(@NonNull View v) {
             }
         });
-        if (dockRow) grid.addItemDecoration(new DockDecoration(COLUMNS, density, cinematic, cfg.alwaysShowNames, cfg.dockOpacity, cfg.dockGlass, cfg.dockEvenPadding));
+        if (dockRow) {
+            DockDecoration band = new DockDecoration(COLUMNS, density, cinematic, cfg.alwaysShowNames, cfg.dockOpacity, cfg.dockGlass, cfg.dockEvenPadding);
+            if (glassHome && cfg.dockGlass) band.setGlassHome(lightInk);
+            grid.addItemDecoration(band);
+        }
         // Reduced motion: the tiles are simply there, with no entrance (reloadApps skips it there too).
         if (animations && !reducedMotion) {
             grid.setLayoutAnimation(new LayoutAnimationController(
@@ -633,6 +654,35 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             makeIconOnly((TextView) btnSettings);
         }
         if (cfg.iconOnlyInputs) makeIconOnly((TextView) btnInputs);
+        if (glassHome && !topMenu && !festive) {
+            // Control Center modules: a disc with the icon, the name in bold and its state underneath.
+            Appearance.makeModule(btnWifi, this, R.drawable.ic_wifi, density, lightInk);
+            wifiIcon = R.drawable.ic_wifi;
+            TextView settings = (TextView) btnSettings;
+            Appearance.makeModule(settings, this, launcherSettingsButton ? R.drawable.ic_home_settings_pill : R.drawable.ic_settings,
+                    density, lightInk);
+            // The status line describes the TV's settings; the Launcher settings button keeps its title alone.
+            settings.setText(Appearance.moduleLabel(settings.getText(),
+                    launcherSettingsButton ? null : getString(R.string.settings_module_status), density));
+            settings.setContentDescription(settings.getText().toString().replace('\n', ' '));
+            if (!launcherSettingsButton) {
+                // Control Center's round Appearance button, right of Settings: Launcher settings (background, layout).
+                btnAppearance = Appearance.roundButton(this, R.drawable.ic_appearance, R.string.appearance, density, lightInk);
+                btnAppearance.setId(View.generateViewId());
+                btnAppearance.setOnClickListener(v -> startActivityForResult(
+                        new Intent(this, LauncherSettingsActivity.class), LAUNCHER_SETTINGS_REQUEST));
+                ((LinearLayout) findViewById(R.id.topButtons)).addView(btnAppearance);
+            }
+        }
+        if (glassHome) setUpGlassHeader();
+        hideRowsAtDock = glassHome && cfg.dockRow && cfg.rowsBelowDock == 0;
+        if (cfg.nowPlaying) {
+            nowPlaying = new NowPlayingPanel(this, root, density, lightInk, new NowPlayingPanel.Exits() {
+                @Override public void up() { firstTopButton().requestFocus(); }
+                @Override public void down() { focusTile(lastFocused % COLUMNS); }
+            });
+            nowPlaying.setAbove(findViewById(R.id.topButtons));
+        }
         btnSettings.setOnLongClickListener(v -> {
             showSettingsMenu();
             return true;
@@ -645,13 +695,31 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
             if (keyCode == KeyEvent.KEYCODE_DPAD_UP) return true;
             if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                // The Now Playing panel sits between the top bar and the dock.
+                if (nowPlaying != null && nowPlaying.isShown()) {
+                    nowPlaying.focus();
+                    return true;
+                }
                 // Back to the dock tile Up came from, not wherever the focus finder lands.
                 focusTile(lastFocused % COLUMNS);
                 return true;
             }
+            if (nowPlaying != null && (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT)) {
+                // With the Now Playing panel just below, the focus finder can pick its buttons over the next pill:
+                // walk the top bar's shown buttons in order instead.
+                List<View> row = new ArrayList<>();
+                for (View b : new View[]{btnInputs, btnWifi, btnReorder, btnLibraryTop, findViewById(R.id.btnSettings), btnAppearance}) {
+                    if (b != null && b.getVisibility() == View.VISIBLE) row.add(b);
+                }
+                if (rtlMenuBar) Collections.reverse(row);
+                int at = row.indexOf(v) + (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT ? 1 : -1);
+                if (at >= 0 && at < row.size()) row.get(at).requestFocus();
+                return true;
+            }
             int firstButton = btnInputs.getVisibility() == View.VISIBLE ? R.id.btnInputs : firstTopButton().getId();
             int leftButton = rtlMenuBar ? R.id.btnSettings : firstButton;
-            int rightButton = rtlMenuBar ? firstButton : R.id.btnSettings;
+            int lastButton = btnAppearance != null ? btnAppearance.getId() : R.id.btnSettings;
+            int rightButton = rtlMenuBar ? firstButton : lastButton;
             if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) return v.getId() == leftButton;
             return keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && v.getId() == rightButton;
         };
@@ -660,8 +728,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         btnSettings.setOnKeyListener(pillKeys);
         btnReorder.setOnKeyListener(pillKeys);
         btnLibraryTop.setOnKeyListener(pillKeys);
+        if (btnAppearance != null) btnAppearance.setOnKeyListener(pillKeys);
         if (advancedEffects) {
-            for (View button : new View[]{btnInputs, btnWifi, btnReorder, btnLibraryTop, btnSettings}) {
+            for (View button : new View[]{btnInputs, btnWifi, btnReorder, btnLibraryTop, btnSettings, btnAppearance}) {
+                if (button == null) continue;
                 button.setOnFocusChangeListener((view, focused) -> view.animate()
                         .scaleX(focused ? 1.04f : 1f).scaleY(focused ? 1.04f : 1f)
                         .setDuration(reducedMotion ? Motion.REDUCED_MS : 160).start());
@@ -780,6 +850,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         super.onStart();
         stopped = false;
         started = true;
+        if (nowPlaying != null) nowPlaying.start();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(timeReceiver, timeFilter, Context.RECEIVER_NOT_EXPORTED);
         } else {
@@ -1024,6 +1095,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     protected void onStop() {
         super.onStop();
         started = false;
+        if (nowPlaying != null) nowPlaying.stop();
         unregisterReceiver(timeReceiver);
         handler.removeCallbacks(clockCheck);
         stopped = true;
@@ -1319,7 +1391,23 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             return pos != RecyclerView.NO_POSITION && movingKey.equals(adapter.keyAt(pos)) ? 1f : 0.45f;
         }
         if (dockEditSlot >= 0 && pos >= 0 && pos < COLUMNS && pos != dockEditSlot) return 0.45f;
+        if (hideRowsAtDock && gridRowsHidden && !reordering && pos >= COLUMNS) return 0f;
         return 1f;
+    }
+
+    /** hideRowsAtDock: fade the rows under the dock out (focus on the dock or above) or in (focus in the rows). */
+    private void setGridRowsHidden(boolean hidden) {
+        if (!hideRowsAtDock || gridRowsHidden == hidden) return;
+        gridRowsHidden = hidden;
+        for (int i = 0; i < grid.getChildCount(); i++) {
+            View item = grid.getChildAt(i);
+            int pos = grid.getChildAdapterPosition(item);
+            if (pos < COLUMNS) continue;
+            item.animate().cancel();
+            float to = tileAlpha(pos);
+            if (!animations || reducedMotion) item.setAlpha(to);
+            else item.animate().alpha(to).setDuration(hidden ? 160 : 260).start();
+        }
     }
 
     /** Ends the mode and saves the order if it changed since the mode started. */
@@ -1450,6 +1538,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     @Override
     public void onTileFocused(int position, View card) {
+        setGridRowsHidden(position < COLUMNS);
+        if (nowPlaying != null) nowPlaying.setSuppressed(dockRow && position >= COLUMNS);
         lastFocused = position;
         lastFocusedKey = adapter.keyAt(position);
         // Focus restored before the first layout (cold start): the tile has no size yet, and the glass
@@ -1550,7 +1640,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private void showHero(int position, float dockTopInRoot) {
         String label = adapter.labelAt(position);
         int color = adapter.ambientColorAt(position);
-        float y = dockTopInRoot - 14 * density - 26 * density - hero.getHeight();
+        // Glass Home's larger clock leaves less room above the dock: the shelf sits closer to it.
+        float y = dockTopInRoot - (glassHome ? 22 : 40) * density - hero.getHeight();
+        if (nowPlaying != null) nowPlaying.placeAbove(dockTopInRoot);
         boolean changed = !label.contentEquals(heroName.getText());
         if (cinematic) showHeroArt(position);
 
@@ -1608,7 +1700,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     /** The shelf's text for this dock app: its name and, on the cinematic shelf, "Last opened" and the dots. */
     private void fillHero(int position, String label) {
         heroName.setText(label);
-        if (!cinematic) return;
+        if (!cinematic && !glassHome) return;
         updateHeroMeta(position);
         updateHeroDots(position);
     }
@@ -1627,6 +1719,46 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         View scrim = findViewById(R.id.heroScrim);
         scrim.setBackground(scrimDrawable());
         scrim.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * Glass Home's shelf: the cinematic shelf's name, "Last opened" line and dots, without the artwork or its
+     * scrim, so the chosen background (light ones included) stays as it is behind the glow.
+     */
+    private void setUpGlassShelf() {
+        heroName.setTypeface(getResources().getFont(R.font.inter_display_bold));
+        heroName.setTextSize(TypedValue.COMPLEX_UNIT_SP, 54f);
+        heroName.setLetterSpacing(-0.03f);
+        heroMeta.setTypeface(getResources().getFont(R.font.inter_medium));
+        heroMeta.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
+        heroMeta.setVisibility(View.INVISIBLE);
+        heroDots.setVisibility(View.VISIBLE);
+    }
+
+    /** Glass Home's header: a larger, heavier clock in Inter Display, and dark ink on a light background. */
+    private void setUpGlassHeader() {
+        TextView clock = findViewById(R.id.clock);
+        clock.setTypeface(getResources().getFont(R.font.inter_display_semibold));
+        clock.setTextSize(TypedValue.COMPLEX_UNIT_SP, 72f);
+        clock.setLetterSpacing(-0.035f);
+        TextView ampm = findViewById(R.id.ampm);
+        ampm.setTypeface(getResources().getFont(R.font.inter_semibold));
+        ampm.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f);
+        ampm.setLetterSpacing(0.02f);
+        ((ViewGroup.MarginLayoutParams) ampm.getLayoutParams()).bottomMargin = Math.round(12 * density);
+        TextClock date = findViewById(R.id.date);
+        // The short date ("Thu, Oct 22"): the Control Center buttons leave the long one no room beside the clock.
+        String shortDate = android.text.format.DateFormat.getBestDateTimePattern(Locale.getDefault(), "EEEMMMd");
+        date.setFormat12Hour(shortDate);
+        date.setFormat24Hour(shortDate);
+        date.setLetterSpacing(0.08f);
+        date.setTypeface(getResources().getFont(R.font.inter_semibold));
+        date.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f);
+        ((ViewGroup.MarginLayoutParams) ((View) date.getParent()).getLayoutParams()).bottomMargin = Math.round(13 * density);
+        // No greeting over the clock: the clock alone, as on the mockup, leaves room for the shelf's name.
+        greeting.setVisibility(View.GONE);
+        Appearance.inkTree(root, lightInk);
+        greetingColor = greeting.getCurrentTextColor();
     }
 
     /**
@@ -1694,7 +1826,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         String text = getString(R.string.last_opened, rel);
         SpannableString line = new SpannableString(text);
         int at = text.indexOf(rel);
-        if (at >= 0) line.setSpan(new ForegroundColorSpan(0xFFFFFFFF), at, at + rel.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if (at >= 0) line.setSpan(new ForegroundColorSpan(Appearance.ink(lightInk)), at, at + rel.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         heroMeta.setText(line);
         heroMeta.setVisibility(View.VISIBLE);
     }
@@ -1718,7 +1850,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         for (int i = 0; i < count; i++) {
             View dot = heroDots.getChildAt(rtlAppGrid ? count - 1 - i : i);
             boolean on = i == position;
-            ((GradientDrawable) dot.getBackground()).setColor(on ? 0xFFFFFFFF : 0x4DFFFFFF);
+            int ink = Appearance.ink(lightInk);
+            ((GradientDrawable) dot.getBackground()).setColor(on ? ink : Appearance.withAlphaOf(0x4D000000, ink));
             ViewGroup.LayoutParams lp = dot.getLayoutParams();
             int w = (int) ((on ? 20 : 6) * density);
             if (lp.width != w) {
@@ -1745,7 +1878,30 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(bmp);
             Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            if (cinematic) {
+            if (glassHome && !cinematic) {
+                // Behind the shelf's name: a tight oval over the word and a wide, faint one around it. Softer on a
+                // light background, where the same strength would read as a stain rather than light.
+                float cx = 0.2f, cy = 0.36f;
+                if (root.getWidth() > 0 && root.getHeight() > 0) {
+                    cx = (hero.getX() + 240 * density) / root.getWidth();
+                    cy = (hero.getY() + heroName.getHeight() * 0.55f) / root.getHeight();
+                }
+                int core = lightInk ? 0x66 : 0xA6, halo = lightInk ? 0x26 : 0x47;
+                RadialGradient tight = new RadialGradient(w * cx, h * cy, w * 0.30f,
+                        new int[]{core << 24 | 0xFFFFFF, (core / 3) << 24 | 0xFFFFFF, 0x00FFFFFF},
+                        new float[]{0f, 0.55f, 1f}, Shader.TileMode.CLAMP);
+                Matrix squash = new Matrix();
+                squash.setScale(1f, 0.6f, w * cx, h * cy);
+                tight.setLocalMatrix(squash);
+                RadialGradient wide = new RadialGradient(w * (cx + 0.06f), h * cy, w * 0.55f,
+                        new int[]{halo << 24 | 0xFFFFFF, 0x00FFFFFF}, null, Shader.TileMode.CLAMP);
+                Matrix squashWide = new Matrix();
+                squashWide.setScale(1f, 0.62f, w * (cx + 0.06f), h * cy);
+                wide.setLocalMatrix(squashWide);
+                paint.setShader(wide);
+                canvas.drawRect(0, 0, w, h, paint);
+                paint.setShader(tight);
+            } else if (cinematic) {
                 // Higher and stronger, from the corner away from the shelf's text: the app's colour floods
                 // the top of the screen over its artwork, and the scrim keeps the text side dark.
                 boolean rtl = getResources().getBoolean(R.bool.rtl_menu_bar);
@@ -2070,6 +2226,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                     rtlAppGrid, keyCode == KeyEvent.KEYCODE_DPAD_LEFT);
         }
         if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+            if (position < COLUMNS && nowPlaying != null && nowPlaying.isShown()) {
+                nowPlaying.focus();                       // dock row: the Now Playing panel is right above
+                return true;
+            }
             if (position < COLUMNS) return false;          // dock row: let focus move to the top bar
             target = position - COLUMNS;
         } else {
@@ -2317,7 +2477,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     /** Shows the Wi-Fi network name on the button when we can read it, otherwise the connection type. */
     private void updateWifiLabel() {
         String text = getString(R.string.wifi);
-        boolean vpn = false, online = false;
+        boolean vpn = false, online = false, onEthernet = false;
         int icon = R.drawable.ic_wifi;
         // The diya's flame: 0 is out (offline), 1 to 4 follow the Wi-Fi signal, Ethernet burns steady at 4.
         int flame = 0;
@@ -2342,6 +2502,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 text = getString(R.string.offline);
                 vpn = false;
             } else if (ethernet) {
+                onEthernet = true;
                 text = getString(R.string.ethernet);
                 icon = R.drawable.ic_ethernet;
                 flame = 4;
@@ -2360,6 +2521,21 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
         // With a VPN app configured, a VPN that is down matters too: show a red "VPN off" capsule then.
         boolean vpnDown = !vpn && online && !vpnApp.isEmpty();
+        if (glassHome && !topMenu && !festive && !wifiIconOnly) {
+            // Control Center module: "Wi-Fi" (or "Ethernet") in bold over the network name or the state.
+            String title = getString(onEthernet ? R.string.ethernet : R.string.wifi);
+            String status = !online ? text : text.equals(title) ? getString(R.string.connected) : text;
+            if (vpn) status = status + " · " + getString(R.string.vpn);
+            else if (vpnDown) status = status + " · " + getString(R.string.vpn_off);
+            CharSequence label = Appearance.moduleLabel(title, status, density);
+            if (!TextUtils.equals(btnWifi.getText(), label)) btnWifi.setText(label);
+            btnWifi.setContentDescription(title + " " + status);
+            if (icon != wifiIcon) {
+                wifiIcon = icon;
+                btnWifi.setCompoundDrawablesRelative(Appearance.disc(this, icon, density, lightInk), null, null, null);
+            }
+            return;
+        }
         if (vpn || vpnDown) {
             // Network name, then the green lock-and-VPN (or red "VPN off") capsule drawn in place of the word.
             String badge = getString(vpn ? R.string.vpn : R.string.vpn_off);

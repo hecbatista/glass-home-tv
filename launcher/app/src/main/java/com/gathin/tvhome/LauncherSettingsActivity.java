@@ -23,6 +23,8 @@ public final class LauncherSettingsActivity extends Activity {
     private final TextView[] rowChoices = new TextView[4];
     private static final int[] DOCK_OPACITIES = {100, 70, 50, 30};
     private final TextView[] dockChoices = new TextView[DOCK_OPACITIES.length];
+    private final TextView[] backgroundChoices = new TextView[Appearance.COLOURS.length];
+    private int background;
     private TextView wallpaperChoice;
     private TextView animationsChoice;
     private TextView advancedChoice;
@@ -48,6 +50,7 @@ public final class LauncherSettingsActivity extends Activity {
         columns = config.columns;
         rowsBelowDock = config.rowsBelowDock;
         dockOpacity = config.dockOpacity;
+        background = config.backgroundColor;
         animations = config.animations;
         advancedEffects = config.animations && config.advancedEffects;
 
@@ -87,6 +90,24 @@ public final class LauncherSettingsActivity extends Activity {
                 refresh();
             });
         }
+        // Glass Home only: the background row (Light, Grey, Dark and three colours). Without it the rows stay hidden.
+        int[] backgroundIds = {R.id.bgLight, R.id.bgGrey, R.id.bgDark, R.id.bgNavy, R.id.bgPlum, R.id.bgPine};
+        for (int i = 0; i < backgroundIds.length; i++) {
+            final int value = Appearance.COLOURS[i];
+            backgroundChoices[i] = findViewById(backgroundIds[i]);
+            backgroundChoices[i].setOnClickListener(v -> {
+                if (background == value) return;
+                background = value;
+                choices.edit().putInt(Config.BACKGROUND_KEY, value).apply();
+                changed();
+                refresh();
+            });
+        }
+        if (!config.glassHome) {
+            for (int id : new int[]{R.id.backgroundLabel, R.id.backgroundRow1, R.id.backgroundRow2}) {
+                findViewById(id).setVisibility(View.GONE);
+            }
+        }
         // Keep the numeric choices increasing in the Hebrew reading direction. Reorder the
         // actual views so D-pad focus follows their positions without changing the saved values.
         if (getResources().getBoolean(R.bool.rtl_app_grid)) {
@@ -123,11 +144,12 @@ public final class LauncherSettingsActivity extends Activity {
             if (!hasOnTvChoices()) return;
             choices.edit().remove("columns").remove(Config.ROWS_BELOW_DOCK_KEY).remove("animations")
                     .remove("advanced_effects").remove(Config.WALLPAPER_CHOICE_KEY)
-                    .remove(Config.DOCK_OPACITY_KEY).commit();
+                    .remove(Config.DOCK_OPACITY_KEY).remove(Config.BACKGROUND_KEY).commit();
             Config current = Config.load(this);
             columns = current.columns;
             rowsBelowDock = current.rowsBelowDock;
             dockOpacity = current.dockOpacity;
+            background = current.backgroundColor;
             animations = current.animations;
             advancedEffects = current.animations && current.advancedEffects;
             changed();
@@ -221,6 +243,9 @@ public final class LauncherSettingsActivity extends Activity {
         for (int i = 0; i < dockChoices.length; i++) {
             dockChoices[i].setSelected(dockOpacity == DOCK_OPACITIES[i]);
         }
+        for (int i = 0; i < backgroundChoices.length; i++) {
+            backgroundChoices[i].setSelected(background == Appearance.COLOURS[i]);
+        }
         animationsChoice.setText(getString(R.string.animations_state,
                 getString(animations ? R.string.on : R.string.off)));
         advancedChoice.setText(getString(R.string.advanced_effects_state,
@@ -238,7 +263,8 @@ public final class LauncherSettingsActivity extends Activity {
     private boolean hasOnTvChoices() {
         return choices.contains("columns") || choices.contains(Config.ROWS_BELOW_DOCK_KEY)
                 || choices.contains("animations") || choices.contains("advanced_effects")
-                || choices.contains(Config.WALLPAPER_CHOICE_KEY) || choices.contains(Config.DOCK_OPACITY_KEY);
+                || choices.contains(Config.WALLPAPER_CHOICE_KEY) || choices.contains(Config.DOCK_OPACITY_KEY)
+                || choices.contains(Config.BACKGROUND_KEY);
     }
 
     private void open(Intent intent) {

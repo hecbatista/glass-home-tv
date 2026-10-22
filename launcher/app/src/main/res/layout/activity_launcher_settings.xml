@@ -88,6 +88,41 @@
             <TextView android:id="@+id/dock30" style="@style/SettingsColumnChoice" android:text="30%" />
         </LinearLayout>
 
+        <!-- Glass Home: the background colour. Light turns the text dark; any other colour comes from a theme's
+             background_color. -->
+        <TextView
+            android:id="@+id/backgroundLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="@string/background_label"
+            android:textColor="#FFFFFFFF"
+            android:textSize="20sp" />
+
+        <LinearLayout
+            android:id="@+id/backgroundRow1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+            <TextView android:id="@+id/bgLight" style="@style/SettingsColumnChoice" android:text="@string/background_light" />
+            <TextView android:id="@+id/bgGrey" style="@style/SettingsColumnChoice" android:text="@string/background_grey" />
+            <TextView android:id="@+id/bgDark" style="@style/SettingsColumnChoice" android:text="@string/background_dark" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/backgroundRow2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+            <TextView android:id="@+id/bgNavy" style="@style/SettingsColumnChoice" android:text="@string/background_navy" />
+            <TextView android:id="@+id/bgPlum" style="@style/SettingsColumnChoice" android:text="@string/background_plum" />
+            <TextView android:id="@+id/bgPine" style="@style/SettingsColumnChoice" android:text="@string/background_pine" />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/wallpaperChoice"
             style="@style/SettingsRow"

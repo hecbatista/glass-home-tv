@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Home</string>
+    <string name="app_name">Glass Home</string>
     <string name="inputs">Inputs</string>
     <string name="wifi">Wi-Fi</string>
     <string name="settings">Settings</string>
@@ -145,4 +145,24 @@
     <!-- Cinematic top shelf (cinematic_home): the line under the focused dock app's name; %1$s is when it was
          last opened, e.g. "5 minutes ago" or "yesterday, 9:40 pm". -->
     <string name="last_opened">Last opened %1$s</string>
+    <!-- Glass Home: the line under "Settings" on the Control Center style button. -->
+    <string name="settings_module_status">Fire TV</string>
+    <!-- Glass Home: the last tile, which opens the TV's own home screen (Amazon's on Fire TV). -->
+    <string name="fire_home_tile">Fire TV Home</string>
+    <!-- Launcher settings: the background colour row and its choices. -->
+    <!-- Glass Home: the Now Playing panel's name (also the media access entry) and its buttons. -->
+    <string name="now_playing">Now Playing</string>
+    <string name="np_previous">Previous</string>
+    <string name="np_play">Play</string>
+    <string name="np_pause">Pause</string>
+    <string name="np_next">Next</string>
+    <!-- Glass Home: the round button beside Settings that opens Launcher settings (background, layout). -->
+    <string name="appearance">Appearance</string>
+    <string name="background_label">Background</string>
+    <string name="background_light">Light</string>
+    <string name="background_grey">Grey</string>
+    <string name="background_dark">Dark</string>
+    <string name="background_navy">Navy</string>
+    <string name="background_plum">Plum</string>
+    <string name="background_pine">Pine</string>
 </resources>
