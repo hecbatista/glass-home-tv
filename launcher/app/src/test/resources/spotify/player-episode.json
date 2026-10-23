@@ -1,0 +1,14 @@
+{
+  "device": {"id": "a1b2c3", "is_active": true, "name": "MacBook Pro", "type": "Computer", "volume_percent": 50},
+  "progress_ms": 1200000,
+  "is_playing": false,
+  "item": {
+    "description": "An episode.", "duration_ms": 3600000, "id": "512ojhOuo1ktJprKbVcKyQ", "name": "Episode 212: Synths",
+    "images": [{"url": "https://i.scdn.co/image/episode640", "height": 640, "width": 640},
+               {"url": "https://i.scdn.co/image/episode64", "height": 64, "width": 64}],
+    "type": "episode",
+    "show": {"id": "38bS44xjbVVZ3No3ByF1dJ", "name": "Song Exploder", "publisher": "Hrishikesh Hirway",
+             "images": [{"url": "https://i.scdn.co/image/show640", "height": 640, "width": 640}]}
+  },
+  "currently_playing_type": "episode"
+}

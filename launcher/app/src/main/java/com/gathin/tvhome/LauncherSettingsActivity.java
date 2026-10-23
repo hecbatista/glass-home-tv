@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -34,6 +35,8 @@ public final class LauncherSettingsActivity extends Activity {
     private int dockOpacity;
     private boolean animations;
     private boolean advancedEffects;
+    /** Glass Home's look for this screen (GlassSettings); null keeps the original one. */
+    private GlassSettings glass;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -42,7 +45,9 @@ public final class LauncherSettingsActivity extends Activity {
         choices = getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE);
         Config config = Config.load(this);
         View reorderChoice = findViewById(R.id.reorderChoice);
-        reorderChoice.setVisibility(config.launcherSettingsButton ? View.VISIBLE : View.GONE);
+        // Glass Home opens this screen from its Customize Home button, so Reorder Apps leads it there too.
+        boolean showReorder = config.launcherSettingsButton || config.glassHome;
+        reorderChoice.setVisibility(showReorder ? View.VISIBLE : View.GONE);
         reorderChoice.setOnClickListener(v -> {
             setResult(RESULT_OK, new Intent().putExtra(EXTRA_REORDER, true));
             finish();
@@ -107,6 +112,8 @@ public final class LauncherSettingsActivity extends Activity {
             for (int id : new int[]{R.id.backgroundLabel, R.id.backgroundRow1, R.id.backgroundRow2}) {
                 findViewById(id).setVisibility(View.GONE);
             }
+        } else {
+            styleGlass(config);
         }
         // Keep the numeric choices increasing in the Hebrew reading direction. Reorder the
         // actual views so D-pad focus follows their positions without changing the saved values.
@@ -162,8 +169,62 @@ public final class LauncherSettingsActivity extends Activity {
         findViewById(R.id.tvSettingsChoice).setOnClickListener(v ->
                 open(SystemSettings.intent(this, Settings.ACTION_SETTINGS)));
         refresh();
-        if (config.launcherSettingsButton) reorderChoice.requestFocus();
+        if (showReorder) reorderChoice.requestFocus();
         else columnChoices[Math.max(0, Math.min(columns - 4, 3))].requestFocus();
+    }
+
+    /** Glass Home: Home's background, type, edges and focus (GlassSettings), and plainer labels. */
+    private void styleGlass(Config config) {
+        glass = new GlassSettings(this, config.backgroundColor);
+        glass.styleScreen(findViewById(R.id.settingsScroll), findViewById(R.id.settingsContent),
+                findViewById(R.id.settingsTitle), config.backgroundColor);
+        TextView reorder = findViewById(R.id.reorderChoice);
+        reorder.setText(R.string.glass_reorder);
+        glass.rowPill(reorder, true);
+        ((ViewGroup.MarginLayoutParams) reorder.getLayoutParams()).topMargin = Math.round(14 * getResources().getDisplayMetrics().density);
+        // All six backgrounds in one row, like the other choices.
+        LinearLayout first = findViewById(R.id.backgroundRow1);
+        LinearLayout second = findViewById(R.id.backgroundRow2);
+        while (second.getChildCount() > 0) {
+            View v = second.getChildAt(0);
+            second.removeViewAt(0);
+            first.addView(v);
+        }
+        second.setVisibility(View.GONE);
+        glass.section(findViewById(R.id.columnsLabel), 0);
+        glass.section(findViewById(R.id.rowsLabel), R.string.glass_rows_label);
+        glass.section(findViewById(R.id.dockLabel), R.string.glass_dock_label);
+        glass.section(findViewById(R.id.backgroundLabel), 0);
+        // The first section sits 36 px under Reorder Apps, as the others sit under their choices.
+        for (int id : new int[]{R.id.columnsRow, R.id.rowsRow, R.id.dockRow, R.id.backgroundRow1}) {
+            glass.choiceRow(findViewById(id), 12);
+        }
+        for (int id : new int[]{R.id.wallpaperChoice, R.id.animationsChoice, R.id.advancedChoice, R.id.followThemeChoice}) {
+            glass.rowPill(findViewById(id), false);
+        }
+        glass.rowPill(findViewById(R.id.defaultHomeChoice), true);
+        glass.rowPill(findViewById(R.id.tvSettingsChoice), true);
+        ((TextView) findViewById(R.id.followThemeChoice)).setText(R.string.glass_follow_theme);
+        for (int id : new int[]{R.id.advancedHint, R.id.followHint, R.id.homeHint}) glass.hint(findViewById(id));
+        // Sections 36 px apart: the rows below the choices start one section gap under them.
+        for (int id : new int[]{R.id.wallpaperChoice, R.id.followThemeChoice, R.id.defaultHomeChoice}) {
+            ((ViewGroup.MarginLayoutParams) findViewById(id).getLayoutParams()).topMargin = Math.round(18 * getResources().getDisplayMetrics().density);
+        }
+        for (int id : new int[]{R.id.animationsChoice, R.id.advancedChoice, R.id.tvSettingsChoice}) {
+            ((ViewGroup.MarginLayoutParams) findViewById(id).getLayoutParams()).topMargin = Math.round(12 * getResources().getDisplayMetrics().density);
+        }
+    }
+
+    /** Glass Home's labels for a row of choices, with the checkmark on the chosen one. */
+    private void glassLabels(TextView[] views, CharSequence[] labels, int chosen, int[] swatches) {
+        for (int i = 0; i < views.length; i++) {
+            glass.label(views[i], labels[i], i == chosen, swatches == null ? 0 : swatches[i]);
+        }
+    }
+
+    private static int indexOf(int[] values, int value) {
+        for (int i = 0; i < values.length; i++) if (values[i] == value) return i;
+        return -1;
     }
 
     private void reverseRow(TextView[] views) {
@@ -258,6 +319,19 @@ public final class LauncherSettingsActivity extends Activity {
                         : wallpaperCurrent != null ? wallpaperCurrent
                         : getString(R.string.wallpaper_theme_default)));
         followThemeChoice.setSelected(!hasOnTvChoices());
+        if (glass != null) {
+            // The checkmark marks the chosen value; selection draws nothing else, so it never looks like focus.
+            glassLabels(columnChoices, new CharSequence[]{"4", "5", "6", "7"}, columns - 4, null);
+            glassLabels(rowChoices, new CharSequence[]{getString(R.string.glass_rows_none), "1", "2", "3"}, rowsBelowDock, null);
+            glassLabels(dockChoices, new CharSequence[]{getString(R.string.glass_dock_solid), "70%", "50%", "30%"},
+                    indexOf(DOCK_OPACITIES, dockOpacity), null);
+            glassLabels(backgroundChoices, new CharSequence[]{getString(R.string.background_light),
+                    getString(R.string.background_grey), getString(R.string.background_dark),
+                    getString(R.string.background_navy), getString(R.string.background_plum),
+                    getString(R.string.background_pine)}, indexOf(Appearance.COLOURS, background), Appearance.COLOURS);
+            followThemeChoice.setSelected(false);
+            followThemeChoice.setAlpha(hasOnTvChoices() ? 1f : 0.5f);
+        }
     }
 
     private boolean hasOnTvChoices() {

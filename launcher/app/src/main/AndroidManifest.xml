@@ -8,6 +8,9 @@
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Glass Home's spotify_connect only: the Spotify Web API (api.spotify.com, accounts.spotify.com) and covers
+         (i.scdn.co). This copy of the launcher departs from the reference one here, which has no network access. -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <!-- Needed since Android 10 to read the Wi-Fi network name for the network pill. Never requested at
          runtime: build-and-install grants it with pm grant, so lint's Android 12 "ask for COARSE with
@@ -158,6 +161,18 @@
 
         <!-- Screensaver: pick it in Settings, or `settings put secure screensaver_components
              com.gathin.tvhome/.ClockDream` over adb. -->
+        <!-- spotify_connect: the Spotify link, sent by launcher/spotify-link.py over ADB. Only the shell may send it:
+             WRITE_SECURE_SETTINGS is granted to the adb shell, never to an ordinary app. -->
+        <receiver
+            android:name=".SpotifyLink"
+            android:exported="true"
+            android:permission="android.permission.WRITE_SECURE_SETTINGS">
+            <intent-filter>
+                <action android:name="com.gathin.tvhome.action.SPOTIFY_LINK" />
+                <action android:name="com.gathin.tvhome.action.SPOTIFY_UNLINK" />
+            </intent-filter>
+        </receiver>
+
         <!-- Glass Home's Now Playing panel (config now_playing): access to the media sessions, nothing else. -->
         <service
             android:name=".NowPlayingListener"

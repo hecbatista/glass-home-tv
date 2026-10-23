@@ -75,19 +75,34 @@ final class Appearance {
      * Liquid glass for a pill of this corner radius: a translucent fill that is brighter at the top, a fine rim and
      * a soft highlight over the upper half. Focused, the pill turns solid: white on a dark background, ink on a light one.
      */
-    static Drawable glassPill(float radius, float density, boolean light) {
+    static Drawable glassPill(View host, float radius, float density, boolean light) {
         GradientDrawable focused = new GradientDrawable();
         focused.setCornerRadius(radius);
         focused.setColor(light ? INK_DARK : 0xF5FFFFFF);
 
         StateListDrawable states = new StateListDrawable();
         states.addState(new int[]{android.R.attr.state_focused}, focused);
-        states.addState(new int[]{}, glassPanel(radius, density, light));
+        states.addState(new int[]{}, glassPanel(host, radius, density, light));
         return states;
     }
 
+    /**
+     * Flat translucent glass: one even see-through fill with no gradient, rim or shine, so the glow shows through
+     * (12% white on a dark background, 60% on a light one). False brings back the emulated glass below.
+     */
+    static final boolean FLAT_GLASS = true;
+
     /** The resting glass alone, for a panel that never takes focus itself (Now Playing). */
-    static Drawable glassPanel(float radius, float density, boolean light) {
+    static Drawable glassPanel(View host, float radius, float density, boolean light) {
+        // Home's material when Glass Home is up (GlassMaterial): the glow behind, toward white and saturated, with a
+        // lit rim. The flat and gradient fills below remain for anything drawn before Home sets the material up.
+        if (GlassMaterial.current != null) return new GlassDrawable(GlassMaterial.current, host, radius);
+        if (FLAT_GLASS) {
+            GradientDrawable flat = new GradientDrawable();
+            flat.setCornerRadius(radius);
+            flat.setColor(light ? 0x99FFFFFF : 0x1FFFFFFF);
+            return flat;
+        }
         GradientDrawable fill = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, light
                 ? new int[]{0xD9FFFFFF, 0xA6FFFFFF} : new int[]{0x38FFFFFF, 0x12FFFFFF});
         fill.setCornerRadius(radius);
@@ -173,7 +188,7 @@ final class Appearance {
     static TextView roundButton(Context ctx, int iconRes, int label, float density, boolean light) {
         TextView b = new TextView(ctx);
         int size = Math.round(64 * density);
-        b.setBackground(glassPill(size / 2f, density, light));
+        b.setBackground(glassPill(b, size / 2f, density, light));
         Drawable icon = ctx.getDrawable(iconRes).mutate();
         icon.setBounds(0, 0, icon.getIntrinsicWidth(), icon.getIntrinsicHeight());
         b.setCompoundDrawablesRelative(icon, null, null, null);
@@ -194,7 +209,7 @@ final class Appearance {
     /** Turns a top-bar pill into a Control Center module: 64dp tall, a disc on the left, two lines of text. */
     static void makeModule(TextView pill, Context ctx, int iconRes, float density, boolean light) {
         float radius = 32 * density;
-        pill.setBackground(glassPill(radius, density, light));
+        pill.setBackground(glassPill(pill, radius, density, light));
         pill.setTextColor(pillText(light));
         pill.setCompoundDrawableTintList(null);
         pill.setCompoundDrawablesRelative(disc(ctx, iconRes, density, light), null, null, null);

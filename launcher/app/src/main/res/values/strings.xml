@@ -146,7 +146,7 @@
          last opened, e.g. "5 minutes ago" or "yesterday, 9:40 pm". -->
     <string name="last_opened">Last opened %1$s</string>
     <!-- Glass Home: the line under "Settings" on the Control Center style button. -->
-    <string name="settings_module_status">Fire TV</string>
+    <string name="settings_module_status">Display, sound, apps</string>
     <!-- Glass Home: the last tile, which opens the TV's own home screen (Amazon's on Fire TV). -->
     <string name="fire_home_tile">Fire TV Home</string>
     <!-- Launcher settings: the background colour row and its choices. -->
@@ -156,8 +156,9 @@
     <string name="np_play">Play</string>
     <string name="np_pause">Pause</string>
     <string name="np_next">Next</string>
-    <!-- Glass Home: the round button beside Settings that opens Launcher settings (background, layout). -->
-    <string name="appearance">Appearance</string>
+    <!-- Glass Home: the round button beside Settings, the label shown under it when focused and the title of the
+         Launcher settings screen it opens. -->
+    <string name="appearance">Customize Home</string>
     <string name="background_label">Background</string>
     <string name="background_light">Light</string>
     <string name="background_grey">Grey</string>
@@ -165,4 +166,11 @@
     <string name="background_navy">Navy</string>
     <string name="background_plum">Plum</string>
     <string name="background_pine">Pine</string>
+    <!-- Glass Home's Launcher settings: plainer names for the rows and their choices. -->
+    <string name="glass_reorder">Reorder Apps</string>
+    <string name="glass_rows_label">Rows under the dock</string>
+    <string name="glass_rows_none">None</string>
+    <string name="glass_dock_label">Dock glass</string>
+    <string name="glass_dock_solid">Solid</string>
+    <string name="glass_follow_theme">Reset to Defaults</string>
 </resources>

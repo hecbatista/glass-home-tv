@@ -180,10 +180,16 @@ final class Config {
     final String glowStyle;
     /** glass_home: Inter, the big clock, Control Center buttons, liquid glass and ink that follows the background. */
     boolean glassHome;
+    /** grid_apps: the apps that open the rows under the dock, in order, ahead of the alphabetical rest. */
+    List<String> gridApps = Collections.emptyList();
     /** fire_home_tile: a last tile that opens stock_home_redirect's home screen. */
     boolean fireHomeTile;
     /** now_playing: the Control Center style Now Playing panel above the dock (Glass Home only). */
     boolean nowPlaying;
+    /** spotify_connect: the Now Playing panel also follows the Spotify account on other devices. */
+    boolean spotifyConnect;
+    /** lyrics: the Now Playing panel's lyrics card, from LRCLIB (Glass Home's Now Playing only). */
+    boolean lyrics;
 
     static final String GLOW_RADIAL = "radial", GLOW_HORIZON = "horizon";
     /** Show each rotating wallpaper's name from wallpapers/captions.txt (config.xml / theme wallpaper_captions). */
@@ -348,7 +354,10 @@ final class Config {
         String stockHomeRedirect = res.getString(R.string.stock_home_redirect).trim();
         boolean glassHome = res.getBoolean(R.bool.glass_home);
         boolean fireHomeTile = res.getBoolean(R.bool.fire_home_tile);
+        List<String> gridApps = new ArrayList<>(Arrays.asList(res.getStringArray(R.array.grid_apps)));
         boolean nowPlaying = res.getBoolean(R.bool.now_playing);
+        boolean spotifyConnect = res.getBoolean(R.bool.spotify_connect);
+        boolean lyrics = res.getBoolean(R.bool.lyrics);
         // Glass Home's dark background is a soft near-black rather than pure black.
         if (glassHome) background = Appearance.DARK;
         boolean cinematic = res.getBoolean(R.bool.cinematic_home);
@@ -431,7 +440,10 @@ final class Config {
             glowStyle = string(json, "glow_style", glowStyle);
             glassHome = bool(json, "glass_home", glassHome);
             fireHomeTile = bool(json, "fire_home_tile", fireHomeTile);
+            gridApps = stringList(json, "grid_apps", gridApps);
             nowPlaying = bool(json, "now_playing", nowPlaying);
+            spotifyConnect = bool(json, "spotify_connect", spotifyConnect);
+            lyrics = bool(json, "lyrics", lyrics);
         }
         // A theme push or reset invalidates choices made on the TV. On first use, remember the
         // current theme without clearing choices from an older launcher version.
@@ -490,7 +502,10 @@ final class Config {
                 Math.max(0, idleClockMinutes), keyFilter, dockGlass, glowStyle, wallpaperCaptions, handleViewInputs, tileMenu, dockEvenPadding);
         cfg.glassHome = glassHome;
         cfg.fireHomeTile = fireHomeTile && !stockHomeRedirect.isEmpty();
+        cfg.gridApps = gridApps;
         cfg.nowPlaying = glassHome && nowPlaying;
+        cfg.spotifyConnect = cfg.nowPlaying && spotifyConnect;
+        cfg.lyrics = cfg.nowPlaying && lyrics;
         return cfg;
     }
 

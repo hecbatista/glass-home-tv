@@ -182,8 +182,13 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final float restNameAlpha;
     /** cinematic_home: only then does a launch record the last-opened app the shelf uses. */
     private final boolean cinematic;
+    /** Glass Home's even dock gap in dp (EVEN_GAP_DP), or 0 for the usual tile sizes. */
+    private final float evenGapDp;
+    private final float focusScale;
     /** Dock order (config.xml dock_apps, or a theme's config.json). */
     private final List<String> favourites;
+    /** The apps that open the rows under the dock (config.xml grid_apps), in order. */
+    private final List<String> gridFirst;
     /** Grid apps fill the dock slots dock_apps leaves free (config.xml, fill_dock). */
     private final boolean fillDock;
     /** Dock apps found at the last reload, and the empty slots after them. */
@@ -219,6 +224,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         this.listener = listener;
         this.dockSize = dockSize;
         this.favourites = cfg.dockApps;
+        this.gridFirst = cfg.gridApps;
         this.fillDock = cfg.fillDock;
         this.hidden = new HashSet<>(cfg.hiddenApps);
         this.libraryPreload = new HashSet<>(cfg.libraryApps);
@@ -233,6 +239,10 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         this.dockRow = cfg.dockRow;
         this.restNameAlpha = cfg.alwaysShowNames ? 0.75f : 0f;
         this.cinematic = cfg.cinematicHome || cfg.glassHome;
+        // Glass Home's even dock: 44 px around and between the tiles, and a ×1.10 zoom that leaves the focused tile
+        // 36 px of the band above it.
+        this.evenGapDp = cfg.glassHome && cfg.dockEvenPadding && cfg.dockRow ? EVEN_GAP_DP : 0f;
+        this.focusScale = !animations ? 1f : advancedEffects && evenGapDp == 0f ? 1.12f : 1.10f;
         this.fireHome = cfg.fireHomeTile ? cfg.stockHomeRedirect : null;
         this.lightInk = cfg.glassHome && Appearance.isLight(cfg.backgroundColor);
         this.launchActions = cfg.launchActions;
@@ -307,6 +317,13 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 if (fa < 0) return 1;
                 if (fb < 0) return -1;
                 return Integer.compare(fa, fb);
+            }
+            // grid_apps open the rows under the dock, in their own order.
+            int ga = gridFirst.indexOf(a.pkg), gb = gridFirst.indexOf(b.pkg);
+            if (ga >= 0 || gb >= 0) {
+                if (ga < 0) return 1;
+                if (gb < 0) return -1;
+                return Integer.compare(ga, gb);
             }
             // Cards come right after the configured dock apps, before the alphabetical grid.
             boolean ca = a.kind == Entry.CARD, cb = b.kind == Entry.CARD;
@@ -398,7 +415,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         float density = parent.getResources().getDisplayMetrics().density;
         int width = parent.getWidth() > 0 ? parent.getWidth() : parent.getMeasuredWidth();
         int inner = width - parent.getPaddingLeft() - parent.getPaddingRight();
-        int w = tileWidthPx(inner, parent.getHeight(), dockSize, rowsBelowDock, dockTitle, dockRow, density), h = tileHeightPx(w);
+        int w = tileWidth(inner, parent.getHeight(), density), h = tileHeightPx(w);
         View card = v.findViewById(R.id.card);
         ViewGroup.LayoutParams cardLp = card.getLayoutParams();
         cardLp.width = w;
@@ -415,8 +432,21 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             v.setPadding(v.getPaddingLeft(), pad, v.getPaddingRight(), pad);
         }
         name.setLayoutParams(nameLp);
-        if (lightInk) ((TextView) name).setTextColor(Appearance.withAlphaOf(0xF2000000, Appearance.INK_DARK));
-        return new Holder(v, listener, animations, advancedEffects, reducedMotion, restNameAlpha, focusOvershoot);
+        if (lightInk) {
+            ((TextView) name).setTextColor(Appearance.withAlphaOf(0xF2000000, Appearance.INK_DARK));
+            // On Light a white banner melts into the light glass: a 1.5 px hairline at 10% ink inside the tile's
+            // corners, and a soft shadow (about 0 3 10 px at 10%) under it.
+            android.graphics.drawable.GradientDrawable hairline = new android.graphics.drawable.GradientDrawable();
+            hairline.setCornerRadius(cornerRadius(w, density));
+            hairline.setStroke(Math.round(0.75f * density), 0x1A000000);
+            card.setForeground(hairline);
+            card.setElevation(2f * density);
+            if (android.os.Build.VERSION.SDK_INT >= 28) {
+                card.setOutlineSpotShadowColor(0x80000000);
+                card.setOutlineAmbientShadowColor(0x40000000);
+            }
+        }
+        return new Holder(v, listener, animations, advancedEffects, reducedMotion, restNameAlpha, focusOvershoot, focusScale);
     }
 
     @Override
@@ -638,7 +668,24 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     float focusScale() {
-        return !animations ? 1f : advancedEffects ? 1.12f : 1.10f;
+        return focusScale;
+    }
+
+    /** Glass Home's gap between dock tiles and around them (dp): the band's padding with dock_even_padding. */
+    static final float EVEN_GAP_DP = 22f;
+
+    /**
+     * The tile width this adapter lays out: tileWidthPx, or with Glass Home's even dock a cell minus the gap, so the
+     * gap between tiles equals the band's padding around them.
+     */
+    int tileWidth(int innerWidthPx, int gridHeightPx, float density) {
+        int w = tileWidthPx(innerWidthPx, gridHeightPx, dockSize, rowsBelowDock, dockTitle, dockRow, density);
+        if (evenGapDp == 0f || rowsBelowDock > 0 || innerWidthPx <= 0) return w;
+        return evenTileWidthPx(innerWidthPx, dockSize, evenGapDp * density);
+    }
+
+    static int evenTileWidthPx(int innerWidthPx, int columns, float gapPx) {
+        return Math.max(1, Math.round(innerWidthPx / (float) columns - gapPx));
     }
 
     /** A vivid colour sampled from the app's banner (or icon), cached per entry; a card's accent when it set one. */
@@ -713,9 +760,10 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         /** Alpha of the name while the tile is not focused (always_show_names). */
         final float restNameAlpha;
         final boolean overshoot;
+        final float focusScale;
 
         Holder(View v, TileListener listener, boolean animations, boolean advancedEffects,
-               boolean reducedMotion, float restNameAlpha, boolean overshoot) {
+               boolean reducedMotion, float restNameAlpha, boolean overshoot, float focusScale) {
             super(v);
             card = v.findViewById(R.id.card);
             cardBackground = card.getBackground();
@@ -728,6 +776,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             this.reducedMotion = reducedMotion;
             this.restNameAlpha = restNameAlpha;
             this.overshoot = overshoot;
+            this.focusScale = focusScale;
 
             final float density = v.getResources().getDisplayMetrics().density;
             card.setOutlineProvider(new ViewOutlineProvider() {
@@ -751,8 +800,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 view.animate().cancel();
                 banner.animate().cancel();
                 name.animate().cancel();
-                float scale = !animations ? 1f : advancedEffects ? 1.12f : 1.10f;
-                float s = focused ? scale : 1f;
+                float s = focused ? focusScale : 1f;
                 if (!animations) {
                     view.setScaleX(1f);
                     view.setScaleY(1f);

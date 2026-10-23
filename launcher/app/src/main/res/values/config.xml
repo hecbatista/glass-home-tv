@@ -21,7 +21,12 @@
         <item>com.hbo.hbonow</item>
         <item>com.amazon.firetv.youtube</item>
         <item>com.disney.disneyplus</item>
-        <item>com.hulu.plus</item>
+        <item>com.stremio.one</item>
+    </string-array>
+    <!-- Apps that come first in the rows under the dock, in this order, ahead of the alphabetical rest (the owner's own
+         reordering still wins). Missing apps are skipped. A theme can set "grid_apps" too. -->
+    <string-array name="grid_apps">
+        <item>ch.protonvpn.android</item>
     </string-array>
     <!-- With fewer dock_apps than columns (or a dock app that is not installed), the free dock slots take
          the first grid apps, so the dock never shows a gap. false leaves them empty (#162); a theme can
@@ -47,6 +52,14 @@
          playing (Spotify, Amazon Music), with previous, play/pause and next. Needs glass_home and the media access
          glass-install.sh grants. A theme can set "now_playing" too. -->
     <bool name="now_playing">true</bool>
+    <!-- The Now Playing panel also shows what the owner's Spotify account plays on other devices (a phone, a speaker),
+         from the Spotify Web API, every few seconds while Home is in front. Needs now_playing and a link made with
+         launcher/spotify-link.py; without the link nothing is asked of Spotify. A theme can set "spotify_connect". -->
+    <bool name="spotify_connect">true</bool>
+    <!-- A lyrics card on the Now Playing panel: the previous, current and next line of the song's synced lyrics from
+         LRCLIB (lrclib.net, free, no key), growing the panel upward. Songs without synced lyrics keep the plain panel.
+         Needs now_playing. A theme can set "lyrics" too. -->
+    <bool name="lyrics">true</bool>
 
     <!-- Open the Live TV app above the first time Home comes up after the TV is switched on, for sets that are
          mostly used for broadcast TV. Once per boot: Home after that stays Home. Can also be set with
@@ -196,7 +209,7 @@
     <!-- Optional VPN app the network pill opens (hold the pill for Wi-Fi settings), e.g. the package of the
          VPN you use. Empty: the pill opens Wi-Fi settings. The green VPN badge shows for any VPN either way;
          with an app set here, a red "VPN off" badge also shows while no VPN is up. -->
-    <string name="vpn_app" translatable="false"></string>
+    <string name="vpn_app" translatable="false">ch.protonvpn.android</string>
     <!-- The dock as its own row: a lighter band, no names under the tiles, parked low on the screen with the top
          shelf above it. false makes the dock apps simply the first tiles of one plain grid (still in dock_apps
          order, no empty slots), with names under every tile and the glow behind every focused tile. -->
@@ -214,7 +227,7 @@
     <!-- The dock band's padding equals the gap between its tiles on all four sides (as far as the grid's edges leave room),
          so its corners are concentric with the tiles' and the spacing reads even. false (the default) keeps the fixed
          14dp above and below, up to 22dp at the sides and 26dp corners. Can also be set with "dock_even_padding": true in a theme's config.json. -->
-    <bool name="dock_even_padding">false</bool>
+    <bool name="dock_even_padding">true</bool>
     <!-- A reorder button (two arrows) in the top bar. Off by default: reordering is also in the Settings
          button's long-press menu, so it needs no extra button on screen. -->
     <bool name="reorder_button">false</bool>

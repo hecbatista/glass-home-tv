@@ -153,6 +153,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private String glowStyle;
     /** Glass Home (config glass_home), and whether its background is light enough to need dark ink. */
     private boolean glassHome, lightInk;
+    /** Glass Home with dock_even_padding: 44 px around and between the dock tiles. */
+    private boolean evenDock;
+    /** Glass Home's liquid glass for this screen (GlassMaterial.current while it is up), or null. */
+    private GlassMaterial glassMaterial;
     /** Glass Home's Now Playing panel (config now_playing), or null. */
     private NowPlayingPanel nowPlaying;
     /**
@@ -405,6 +409,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (festive) glass.setAccent(festival.accentColor());
         if (lightInk) glass.setOnLight(true);
         ambient = findViewById(R.id.ambient);
+        if (glassHome) {
+            // The liquid glass reads the glow behind it from the same mask and colour as the ambient view.
+            glassMaterial = new GlassMaterial(lightInk, cfg.backgroundColor, density);
+            glassMaterial.attach(root, ambient);
+            // A theme wallpaper behind the glass: see-through white instead of the adjusted background and glow.
+            glassMaterial.setOverWallpaper(!cfg.wallpapers.isEmpty());
+            GlassMaterial.current = glassMaterial;
+            // The glass draws past each surface's bounds: the 1px dark side edge on both themes, the shadow on Light.
+            root.setClipChildren(false);
+        }
         // The glow is one bitmap, so its alpha can be applied while drawing it. Otherwise every frame of
         // a fade renders it into a full-screen offscreen buffer first.
         ambient.forceHasOverlappingRendering(false);
@@ -517,6 +531,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             public void onChildViewDetachedFromWindow(@NonNull View v) {
             }
         });
+        evenDock = glassHome && cfg.dockEvenPadding && cfg.dockRow;
+        if (evenDock) {
+            // The even dock: the band from x 112 to 1808 with the tiles 44 px inside it and 44 px apart. The band
+            // reaches 22dp past the tiles, 11dp past the grid's padding, so the grid's frame must not clip it.
+            int side = Math.round((AppAdapter.EVEN_GAP_DP / 2f) * density);
+            grid.setPaddingRelative(side, grid.getPaddingTop(), side, grid.getPaddingBottom());
+            ((ViewGroup) grid.getParent()).setClipChildren(false);
+        }
         if (dockRow) {
             DockDecoration band = new DockDecoration(COLUMNS, density, cinematic, cfg.alwaysShowNames, cfg.dockOpacity, cfg.dockGlass, cfg.dockEvenPadding);
             if (glassHome && cfg.dockGlass) band.setGlassHome(lightInk);
@@ -541,7 +563,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             int h = b - t;
             // Item height follows the tile size, which follows the columns and the rows that must fit (AppAdapter.tileWidthPx).
             int inner = (r - l) - grid.getPaddingLeft() - grid.getPaddingRight();
-            int tileW = AppAdapter.tileWidthPx(inner, h, COLUMNS, rowsBelowDock, cfg.dockTitle, cfg.dockRow, density);
+            int tileW = adapter.tileWidth(inner, h, density);
             int itemH = AppAdapter.itemHeightPx(AppAdapter.tileHeightPx(tileW), density);
             int dockRow = itemH + (int) (AppAdapter.DOCK_EXTRA_DP * density);   // item height plus DockDecoration offsets
             int gridRows = itemH * rowsBelowDock;
@@ -549,6 +571,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             // even when the theme requests an extra visible row below the dock.
             int shelfClearance = cfg.appLibrary ? hero.getMeasuredHeight() + (int) (40 * density) : 0;
             int want = Math.max(shelfClearance, h - dockRow - gridRows - (int) (AppAdapter.BOTTOM_ROOM_DP * density));
+            // The even band reaches 22dp under the tiles: it ends at y 985, 95 px over the screen's bottom.
+            if (evenDock && rowsBelowDock == 0) want += (int) (10 * density);
             // Where the rows cannot fit even at the smallest tile (3 rows with the title on), the title keeps its
             // room above the dock and the last rows run off the bottom instead of the title drawing over the clock.
             if (MainActivity.this.dockRow && cfg.dockTitle && rowsBelowDock > 0) want = Math.max(want, (int) (AppAdapter.TITLE_ROOM_DP * density));
@@ -667,7 +691,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             settings.setContentDescription(settings.getText().toString().replace('\n', ' '));
             if (!launcherSettingsButton) {
                 // Control Center's round Appearance button, right of Settings: Launcher settings (background, layout).
-                btnAppearance = Appearance.roundButton(this, R.drawable.ic_appearance, R.string.appearance, density, lightInk);
+                btnAppearance = Appearance.roundButton(this, R.drawable.ic_tune, R.string.appearance, density, lightInk);
                 btnAppearance.setId(View.generateViewId());
                 btnAppearance.setOnClickListener(v -> startActivityForResult(
                         new Intent(this, LauncherSettingsActivity.class), LAUNCHER_SETTINGS_REQUEST));
@@ -677,11 +701,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (glassHome) setUpGlassHeader();
         hideRowsAtDock = glassHome && cfg.dockRow && cfg.rowsBelowDock == 0;
         if (cfg.nowPlaying) {
-            nowPlaying = new NowPlayingPanel(this, root, density, lightInk, new NowPlayingPanel.Exits() {
+            nowPlaying = new NowPlayingPanel(this, root, density, lightInk, cfg.spotifyConnect, cfg.lyrics,
+                    animations && !reducedMotion, new NowPlayingPanel.Exits() {
                 @Override public void up() { firstTopButton().requestFocus(); }
                 @Override public void down() { focusTile(lastFocused % COLUMNS); }
             });
             nowPlaying.setAbove(findViewById(R.id.topButtons));
+            if (glassHome && cfg.dockEvenPadding) nowPlaying.setBandReach(AppAdapter.EVEN_GAP_DP * density);
         }
         btnSettings.setOnLongClickListener(v -> {
             showSettingsMenu();
@@ -737,6 +763,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                         .setDuration(reducedMotion ? Motion.REDUCED_MS : 160).start());
             }
         }
+        if (btnAppearance != null) addAppearanceLabel();
         if (festive) applyFestiveSkin((TextView) btnInputs, (TextView) btnSettings);
 
         // Hide the glass when focus leaves the tiles.
@@ -1138,6 +1165,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (GlassMaterial.current == glassMaterial) GlassMaterial.current = null;
         unregisterReceiver(packageReceiver);
         wallpaperPlayer.close();
         ConnectivityManager cm = getSystemService(ConnectivityManager.class);
@@ -1641,7 +1669,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         String label = adapter.labelAt(position);
         int color = adapter.ambientColorAt(position);
         // Glass Home's larger clock leaves less room above the dock: the shelf sits closer to it.
-        float y = dockTopInRoot - (glassHome ? 22 : 40) * density - hero.getHeight();
+        // Glass Home: the shelf ends 49 px above the even band (which reaches 22dp above the tiles), so the name's cap
+        // and the meta line's descenders span the Now Playing cover beside it.
+        float y = dockTopInRoot - (!glassHome ? 40 : evenDock ? 46.5f : 22) * density - hero.getHeight();
         if (nowPlaying != null) nowPlaying.placeAbove(dockTopInRoot);
         boolean changed = !label.contentEquals(heroName.getText());
         if (cinematic) showHeroArt(position);
@@ -1702,7 +1732,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         heroName.setText(label);
         if (!cinematic && !glassHome) return;
         updateHeroMeta(position);
-        updateHeroDots(position);
+        if (cinematic) updateHeroDots(position);
     }
 
     // ---- cinematic shelf -------------------------------------------------------------------------
@@ -1722,8 +1752,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     /**
-     * Glass Home's shelf: the cinematic shelf's name, "Last opened" line and dots, without the artwork or its
-     * scrim, so the chosen background (light ones included) stays as it is behind the glow.
+     * Glass Home's shelf: the cinematic shelf's name and "Last opened" line, without the artwork, its scrim or the
+     * dots (focus already shows which app it is), so the chosen background stays as it is behind the glow. The name's
+     * and the line's first glyphs sit on the clock's edge, x 112.
      */
     private void setUpGlassShelf() {
         heroName.setTypeface(getResources().getFont(R.font.inter_display_bold));
@@ -1732,20 +1763,58 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         heroMeta.setTypeface(getResources().getFont(R.font.inter_medium));
         heroMeta.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
         heroMeta.setVisibility(View.INVISIBLE);
-        heroDots.setVisibility(View.VISIBLE);
+        heroDots.setVisibility(View.GONE);
+        // Measured on the TV: the name's capital starts 2dp into its box, the meta line's 1.5dp.
+        ((ViewGroup.MarginLayoutParams) hero.getLayoutParams()).setMarginStart(Math.round(54 * density));
+        ViewGroup.MarginLayoutParams metaLp = (ViewGroup.MarginLayoutParams) heroMeta.getLayoutParams();
+        metaLp.setMarginStart(Math.round(0.5f * density));
+        metaLp.topMargin = Math.round(18 * density);
+    }
+
+    /**
+     * The Customize Home button's name, 26 px under it while it has focus: its glyph alone does not say that it opens
+     * Launcher settings. Right-aligned with the button, on the top bar's right edge.
+     */
+    private void addAppearanceLabel() {
+        TextView label = new TextView(this);
+        label.setText(R.string.appearance);
+        label.setTypeface(getResources().getFont(R.font.inter_semibold));
+        label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f);
+        label.setIncludeFontPadding(false);
+        label.setTextColor(Appearance.ink(lightInk));
+        label.setAlpha(0f);
+        label.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        root.addView(label, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        View.OnFocusChangeListener before = btnAppearance.getOnFocusChangeListener();
+        btnAppearance.setOnFocusChangeListener((view, focused) -> {
+            if (before != null) before.onFocusChange(view, focused);
+            if (focused) {
+                Rect r = new Rect(0, 0, view.getWidth(), view.getHeight());
+                root.offsetDescendantRectToMyCoords(view, r);
+                label.setX(r.right - label.getWidth());
+                label.setY(r.bottom + 13 * density);
+            }
+            label.animate().cancel();
+            if (!animations || reducedMotion) label.setAlpha(focused ? 1f : 0f);
+            else label.animate().alpha(focused ? 1f : 0f).setDuration(160).start();
+        });
     }
 
     /** Glass Home's header: a larger, heavier clock in Inter Display, and dark ink on a light background. */
     private void setUpGlassHeader() {
         TextView clock = findViewById(R.id.clock);
         clock.setTypeface(getResources().getFont(R.font.inter_display_semibold));
-        clock.setTextSize(TypedValue.COMPLEX_UNIT_SP, 72f);
+        // 96 px: under the shelf's 108 px name, so the app outranks the time.
+        clock.setTextSize(TypedValue.COMPLEX_UNIT_SP, 48f);
         clock.setLetterSpacing(-0.035f);
         TextView ampm = findViewById(R.id.ampm);
         ampm.setTypeface(getResources().getFont(R.font.inter_semibold));
         ampm.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f);
         ampm.setLetterSpacing(0.02f);
-        ((ViewGroup.MarginLayoutParams) ampm.getLayoutParams()).bottomMargin = Math.round(12 * density);
+        // AM/PM and the date sit on the clock's baseline (y 185), not on the bottom of its box.
+        LinearLayout.LayoutParams ampmLp = (LinearLayout.LayoutParams) ampm.getLayoutParams();
+        ampmLp.gravity = Gravity.TOP;
+        ampmLp.bottomMargin = 0;
         TextClock date = findViewById(R.id.date);
         // The short date ("Thu, Oct 22"): the Control Center buttons leave the long one no room beside the clock.
         String shortDate = android.text.format.DateFormat.getBestDateTimePattern(Locale.getDefault(), "EEEMMMd");
@@ -1754,7 +1823,23 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         date.setLetterSpacing(0.08f);
         date.setTypeface(getResources().getFont(R.font.inter_semibold));
         date.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f);
-        ((ViewGroup.MarginLayoutParams) ((View) date.getParent()).getLayoutParams()).bottomMargin = Math.round(13 * density);
+        LinearLayout dateBlock = (LinearLayout) date.getParent();
+        dateBlock.setBaselineAlignedChildIndex(dateBlock.indexOfChild(date));
+        LinearLayout.LayoutParams dateLp = (LinearLayout.LayoutParams) dateBlock.getLayoutParams();
+        dateLp.gravity = Gravity.TOP;
+        dateLp.bottomMargin = 0;
+        // The top bar's modules centred on y 150 (86 to 214), and the 96 px clock centred on the same line. The bar
+        // hangs from the header's top rather than from the clock's bottom, which the smaller clock would move.
+        View header = (View) clockBlock.getParent().getParent();
+        header.setPaddingRelative(header.getPaddingStart(), Math.round(43 * density), header.getPaddingEnd(), header.getPaddingBottom());
+        LinearLayout bar = findViewById(R.id.topButtons);
+        RelativeLayout.LayoutParams barLp = (RelativeLayout.LayoutParams) bar.getLayoutParams();
+        barLp.removeRule(RelativeLayout.ALIGN_BOTTOM);
+        barLp.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+        barLp.bottomMargin = 0;
+        bar.setLayoutParams(barLp);
+        bar.setGravity(Gravity.CENTER_VERTICAL);
+        ((ViewGroup.MarginLayoutParams) clock.getLayoutParams()).topMargin = Math.round(3 * density);
         // No greeting over the clock: the clock alone, as on the mockup, leaves room for the shelf's name.
         greeting.setVisibility(View.GONE);
         Appearance.inkTree(root, lightInk);
@@ -1934,9 +2019,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             glow = new BitmapDrawable(getResources(), bmp);
             glow.setGravity(Gravity.FILL);
             ambient.setBackground(glow);
+            if (GlassMaterial.current != null) GlassMaterial.current.setGlow(bmp);
         }
         // The default tint mode, SRC_IN, keeps the mask's alpha and takes the colour from the tint.
         glow.setTint(0xFF000000 | color);
+        if (GlassMaterial.current != null) GlassMaterial.current.setTint(color);
     }
 
     private void transitionAmbient(int color) {
@@ -2525,8 +2612,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             // Control Center module: "Wi-Fi" (or "Ethernet") in bold over the network name or the state.
             String title = getString(onEthernet ? R.string.ethernet : R.string.wifi);
             String status = !online ? text : text.equals(title) ? getString(R.string.connected) : text;
-            if (vpn) status = status + " · " + getString(R.string.vpn);
-            else if (vpnDown) status = status + " · " + getString(R.string.vpn_off);
+            // The VPN state joins the title ("Wi-Fi · VPN"), which is shorter than a network name, so the button
+            // keeps its width and the date beside the clock keeps its room.
+            if (vpn) title = title + " · " + getString(R.string.vpn);
+            else if (vpnDown) title = title + " · " + getString(R.string.vpn_off);
             CharSequence label = Appearance.moduleLabel(title, status, density);
             if (!TextUtils.equals(btnWifi.getText(), label)) btnWifi.setText(label);
             btnWifi.setContentDescription(title + " " + status);

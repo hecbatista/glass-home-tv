@@ -32,7 +32,18 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
     private int glassTop = 0x24FFFFFF, glassBottom = 0x0DFFFFFF;
 
     /** Glass Home: liquid glass that reads on this background (white and milky on a light one, a fine dark rim). */
+    /** setGlassHome ran: the band draws in GlassMaterial.current when there is one. */
+    private boolean glassHome;
+
     void setGlassHome(boolean lightInk) {
+        glassHome = true;
+        if (Appearance.FLAT_GLASS) {
+            // Flat translucent: one even fill and no rim (8% white on dark, 7% ink on light, so white banners keep an edge).
+            glassTop = glassBottom = lightInk ? 0x12111216 : 0x14FFFFFF;
+            edge.setColor(0x00000000);
+            shaderTop = Float.NaN;
+            return;
+        }
         glassTop = lightInk ? 0xBFFFFFFF : 0x2EFFFFFF;
         glassBottom = lightInk ? 0x8CFFFFFF : 0x10FFFFFF;
         edge.setColor(lightInk ? 0x1A000000 : 0x47FFFFFF);
@@ -119,7 +130,8 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
         if (evenPadding) {
             // The same padding on all four sides, so the band's corners are concentric with the tiles' everywhere.
             int inner = parent.getWidth() - parent.getPaddingLeft() - parent.getPaddingRight();
-            float room = Math.min(rect.top, Math.min(rect.left, parent.getWidth() - rect.right)) - density;
+            // Glass Home unclips the grid's parents, so the band may reach past the grid at the sides.
+            float room = (glassHome ? rect.top : Math.min(rect.top, Math.min(rect.left, parent.getWidth() - rect.right))) - density;
             float even = evenPaddingPx(inner, dockSize, cardWidth, room);
             rect.inset(-even, -even);
             radius = radiusPx(radius, even);
@@ -129,6 +141,14 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
             radius = 26 * density;
         }
         rect.bottom += namesRoom;
+        GlassMaterial glass = glassHome ? GlassMaterial.current : null;
+        if (glass != null) {
+            // Glass Home's material: the glow behind the band shows through it, as on the top bar and the panel.
+            glass.register(parent);
+            float[] o = glass.originOf(parent);
+            glass.draw(c, rect, radius, o[0], o[1]);
+            return;
+        }
         if (lightGlass && (rect.top != shaderTop || rect.bottom != shaderBottom)) {
             // The pills' glass (pill_bg: white, 18% fading to 8%), a little fainter over this much larger area.
             band.setShader(new LinearGradient(0, rect.top, 0, rect.bottom, glassTop, glassBottom,

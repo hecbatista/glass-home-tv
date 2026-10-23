@@ -40,9 +40,20 @@ android {
     }
 }
 
+tasks.withType(Test).configureEach {
+    // SPOTIFY_LIVE=1 runs SpotifyLiveTest against the real Spotify: never "up to date" then (Gradle cannot see that
+    // the account's playback changed), and the test's own lines are printed.
+    if (System.getenv('SPOTIFY_LIVE') == '1' || System.getenv('LYRICS_LIVE') == '1') {
+        outputs.upToDateWhen { false }
+        testLogging { showStandardStreams = true }
+    }
+}
+
 dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.3.2'
     implementation 'androidx.dynamicanimation:dynamicanimation:1.0.0'
     // Test only (never in the APK): plain JVM tests for the module card validators, src/test.
     testImplementation 'junit:junit:4.13.2'
+    // android.jar's org.json is a stub on the JVM; the Spotify parser's tests need the real thing.
+    testImplementation 'org.json:json:20240303'
 }

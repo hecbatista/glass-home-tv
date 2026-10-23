@@ -1,0 +1,7 @@
+{
+  "device": {"id": "5fbb3ba6", "is_active": true, "name": "iPhone", "type": "Smartphone"},
+  "progress_ms": 5000,
+  "is_playing": true,
+  "item": null,
+  "currently_playing_type": "ad"
+}

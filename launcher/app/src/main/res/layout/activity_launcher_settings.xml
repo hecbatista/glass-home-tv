@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/settingsScroll"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FF101419"
     android:fillViewport="true">
 
     <LinearLayout
+        android:id="@+id/settingsContent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -15,6 +17,7 @@
         android:paddingBottom="38dp">
 
         <TextView
+            android:id="@+id/settingsTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/launcher_settings"
@@ -29,6 +32,7 @@
             android:visibility="gone" />
 
         <TextView
+            android:id="@+id/columnsLabel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
@@ -37,6 +41,7 @@
             android:textSize="20sp" />
 
         <LinearLayout
+            android:id="@+id/columnsRow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
@@ -49,6 +54,7 @@
         </LinearLayout>
 
         <TextView
+            android:id="@+id/rowsLabel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
@@ -57,6 +63,7 @@
             android:textSize="20sp" />
 
         <LinearLayout
+            android:id="@+id/rowsRow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
@@ -69,6 +76,7 @@
         </LinearLayout>
 
         <TextView
+            android:id="@+id/dockLabel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
@@ -77,6 +85,7 @@
             android:textSize="20sp" />
 
         <LinearLayout
+            android:id="@+id/dockRow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
@@ -139,6 +148,7 @@
             android:layout_marginTop="10dp" />
 
         <TextView
+            android:id="@+id/advancedHint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
@@ -153,6 +163,7 @@
             android:text="@string/follow_theme" />
 
         <TextView
+            android:id="@+id/followHint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="7dp"
@@ -167,6 +178,7 @@
             android:text="@string/home_settings" />
 
         <TextView
+            android:id="@+id/homeHint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="7dp"
