@@ -16,6 +16,10 @@ final class PlaybackClock {
         this.speed = speed;
     }
 
+    float speed() {
+        return speed;
+    }
+
     long positionAt(long nowMs) {
         return positionMs + (long) ((nowMs - atMs) * speed);
     }

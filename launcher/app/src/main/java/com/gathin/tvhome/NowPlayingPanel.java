@@ -124,14 +124,24 @@ final class NowPlayingPanel {
     private final LyricsScreen screen;
     /** The cover at its own size, for the full-screen view (the panel keeps a small copy). */
     private Bitmap fullArt;
+    // ---- the full-screen view's progress bar ----
+    /** The song the bar follows (the lyrics' key) and its length, 0 when the player has not said. */
+    private String progressKey;
+    private long progressDurationMs;
+    /** The bar's own clock: only positions reported for this song, or the seed a new song starts from (D5). */
+    private final PlaybackClock progressClock = new PlaybackClock();
+    private boolean progressKnown;
+    /** The last report seen (position, its time, speed), null for none: a report counts once, and only when new. */
+    private long[] progressSeen;
     private static final long LYRICS_TICK_MS = 200;
     private final Runnable lyricsTick = new Runnable() {
         @Override public void run() {
             if (lyrics != null && panel.getVisibility() == View.VISIBLE) {
                 lyricsCard.show(lyrics.indexAt(clock.positionAt(SystemClock.elapsedRealtime())));
             }
-            if (lyrics != null && screen != null && screen.isOpen()) {
-                screen.show(lyrics.indexAt(clock.positionAt(SystemClock.elapsedRealtime())));
+            if (screen != null && screen.isOpen()) {
+                feedProgress();
+                if (lyrics != null) screen.show(lyrics.indexAt(clock.positionAt(SystemClock.elapsedRealtime())));
             }
             main.postDelayed(this, LYRICS_TICK_MS);
         }
@@ -358,6 +368,50 @@ final class NowPlayingPanel {
         if (source.getDrawable() instanceof android.graphics.drawable.BitmapDrawable) {
             screen.setSource(((android.graphics.drawable.BitmapDrawable) source.getDrawable()).getBitmap());
         }
+        feedProgress();
+    }
+
+    /** The full-screen view's progress bar, from the bar's own clock. */
+    private void feedProgress() {
+        if (screen == null) return;
+        screen.setProgress(progressKey, progressDurationMs,
+                progressKnown ? progressClock.positionAt(SystemClock.elapsedRealtime()) : -1);
+    }
+
+    /**
+     * What the player said, for the progress bar: the song, its length, and its position ({@code reported} false when
+     * it gave none). A report counts only when it differs from the last one seen, so a new song never takes the
+     * position the old one left behind. With the screen open, a new song starts at 0 at the last speed until its own
+     * report comes in (decision log D5). A report that goes missing mid-song freezes the bar where it is (D3).
+     */
+    private void progressReport(String key, long durationMs, boolean reported, long posMs, long atMs, float speed) {
+        long[] seen = reported ? new long[]{posMs, atMs, Float.floatToIntBits(speed)} : null;
+        boolean fresh = !java.util.Arrays.equals(seen, progressSeen);
+        progressSeen = seen;
+        progressDurationMs = durationMs;
+        long now = SystemClock.elapsedRealtime();
+        if (!key.equals(progressKey)) {
+            progressKey = key;
+            // A report that carries on where the old song was is that song's last state, not the new one's.
+            boolean old = reported && fresh && progressKnown && SongProgress.carriesOn(
+                    posMs + (long) ((now - atMs) * speed), progressClock.positionAt(now));
+            if (old) fresh = false;
+            if (reported && fresh) {
+                progressClock.set(posMs, atMs, speed);
+                progressKnown = true;
+            } else if (progressKnown && screen != null && screen.isOpen()) {
+                progressClock.set(0, now, progressClock.speed());
+            } else {
+                progressKnown = false;
+            }
+        } else if (fresh) {
+            if (reported) {
+                progressClock.set(posMs, atMs, speed);
+                progressKnown = true;
+            } else if (progressKnown) {
+                progressClock.set(progressClock.positionAt(now), now, 0f);
+            }
+        }
     }
 
     boolean isScreenOpen() {
@@ -493,7 +547,11 @@ final class NowPlayingPanel {
             }
             pick(active);
         });
+        // Near a song's end, ask again just after it ends (the 700 ms Next also waits), so the full-screen bar does not
+        // sit at −0:00 waiting for the usual pace.
         long next = api.status() == SpotifyApi.Status.RATE_LIMITED ? POLL_BACKOFF_MS
+                : p != null && p.playing && p.durationMs > 0
+                        ? Math.min(POLL_PLAYING_MS, Math.max(700, p.durationMs - p.progressMs + 700))
                 : p != null && p.playing ? POLL_PLAYING_MS : POLL_IDLE_MS;
         h.postDelayed(poll, next);
     }
@@ -624,6 +682,11 @@ final class NowPlayingPanel {
             clock.set(ps.getPosition(), ps.getLastPositionUpdateTime(),
                     ps.getState() == PlaybackState.STATE_PLAYING ? ps.getPlaybackSpeed() : 0f);
         }
+        boolean reported = ps != null && ps.getPosition() != PlaybackState.PLAYBACK_POSITION_UNKNOWN;
+        progressReport(controller.getPackageName() + "\n" + song + "\n" + by,
+                m.getLong(MediaMetadata.METADATA_KEY_DURATION), reported,
+                reported ? ps.getPosition() : 0, reported ? ps.getLastPositionUpdateTime() : 0,
+                reported && ps.getState() == PlaybackState.STATE_PLAYING ? ps.getPlaybackSpeed() : 0f);
         lyricsFor(controller.getPackageName() + "\n" + song + "\n" + by, song, by == null ? "" : by.toString(),
                 m.getString(MediaMetadata.METADATA_KEY_ALBUM), m.getLong(MediaMetadata.METADATA_KEY_DURATION));
         setSource("tv");   // a session on this TV
@@ -655,6 +718,8 @@ final class NowPlayingPanel {
         setText(title, p.title);
         setText(artist, p.subtitle());
         clock.set(p.progressMs, remoteAt, p.playing ? 1f : 0f);
+        progressReport("spotify\n" + p.itemId + "\n" + p.title, p.durationMs, p.progressMs >= 0, p.progressMs,
+                remoteAt, p.playing ? 1f : 0f);
         lyricsFor("spotify\n" + p.itemId + "\n" + p.title, p.title, p.artist, p.album, p.durationMs);
         setSource(p.sourceIcon());
         artist.setVisibility(View.VISIBLE);

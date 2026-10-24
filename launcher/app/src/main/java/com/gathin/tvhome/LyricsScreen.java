@@ -10,6 +10,7 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.RadialGradient;
+import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.GradientDrawable;
@@ -53,6 +54,11 @@ final class LyricsScreen {
     private final TextView title, artist, none;
     private final ImageButton prev, playPause, next;
     private final ImageView source;
+    /** The song's progress under the artist: the bar and the two times, shown and hidden together. */
+    private final FrameLayout progressRow;
+    private final SongBar bar;
+    private final TextView elapsed, remaining;
+    private final SongProgress progress = new SongProgress();
     private final FadeColumn column;
     private final LinearLayout list;
     private final PathInterpolator ease = new PathInterpolator(0.2f, 0.8f, 0.2f, 1f);
@@ -75,7 +81,8 @@ final class LyricsScreen {
         screen.setKeepScreenOn(true);
         screen.setBackgroundColor(0xFF0B0B0F);
 
-        // Left: the cover (112, 158, 540 square), the title and artist under it, then the buttons and the source glyph.
+        // Left: the cover (112, 158, 540 square), the title and artist under it, the song's progress, then the buttons
+        // and the source glyph.
         cover = new ImageView(ctx);
         cover.setScaleType(ImageView.ScaleType.CENTER_CROP);
         cover.setOutlineProvider(new ViewOutlineProvider() {
@@ -93,12 +100,25 @@ final class LyricsScreen {
         artist = text(30, R.font.inter_medium, 0x9EFFFFFF);
         screen.addView(artist, at(112, 774, 540, 40));
 
+        // The progress: an 8 px bar across the cover's width (y 842), elapsed and remaining under its ends (y 860).
+        // Not a control: never focused, and silent for VoiceView (it would announce every second).
+        progressRow = new FrameLayout(ctx);
+        progressRow.setVisibility(View.INVISIBLE);
+        progressRow.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
+        bar = new SongBar(ctx);
+        progressRow.addView(bar, at(0, 0, 540, 8));
+        elapsed = time(Gravity.START);
+        progressRow.addView(elapsed, at(0, 18, 200, 32));
+        remaining = time(Gravity.END);
+        progressRow.addView(remaining, at(340, 18, 200, 32));
+        screen.addView(progressRow, at(112, 842, 540, 50));
+
         prev = button(R.drawable.ic_np_prev, R.string.np_previous, 52);
         playPause = button(R.drawable.ic_np_pause, R.string.np_pause, 56);
         next = button(R.drawable.ic_np_next, R.string.np_next, 52);
-        screen.addView(prev, at(96, 838, 84, 84));
-        screen.addView(playPause, at(180, 838, 84, 84));
-        screen.addView(next, at(264, 838, 84, 84));
+        screen.addView(prev, at(96, 908, 84, 84));
+        screen.addView(playPause, at(180, 908, 84, 84));
+        screen.addView(next, at(264, 908, 84, 84));
         prev.setOnClickListener(v -> controls.previous());
         playPause.setOnClickListener(v -> controls.playPause());
         next.setOnClickListener(v -> controls.next());
@@ -147,6 +167,15 @@ final class LyricsScreen {
         return t;
     }
 
+    /** A time under the bar: Inter Medium 26 px with tabular digits, so it keeps its width as it counts. */
+    private TextView time(int gravity) {
+        TextView t = text(26, R.font.inter_medium, 0xCCFFFFFF);
+        t.setFontFeatureSettings("tnum");
+        t.setGravity(gravity | Gravity.CENTER_VERTICAL);
+        t.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        return t;
+    }
+
     /** An 84 px round button: the glyph white at rest, ink on Home's white disc when focused. */
     private ImageButton button(int icon, int label, float glyphPx) {
         ImageButton b = new ImageButton(ctx);
@@ -186,6 +215,8 @@ final class LyricsScreen {
     void close() {
         if (!isOpen()) return;
         screen.animate().cancel();
+        progressRow.animate().cancel();
+        progressRow.setAlpha(1f);
         screen.setVisibility(View.GONE);
         controls.closed();
     }
@@ -234,12 +265,36 @@ final class LyricsScreen {
         next.setAlpha(nextAlpha);
     }
 
+    /**
+     * Where the song is, on each tick while open: the song (a key that changes with it), its length (0 or less when
+     * unknown) and the position (below 0 until the player has said). The row shows only with both known. It appears
+     * at once with a new song or before the screen opens, and fades in when it becomes known for the same song.
+     */
+    void setProgress(String song, long durationMs, long positionMs) {
+        if (!progress.update(song, durationMs, positionMs)) return;
+        boolean on = progress.visible();
+        if (on) {
+            bar.setFraction(progress.fraction());
+            String e = progress.elapsedText(), r = progress.remainingText();
+            if (!TextUtils.equals(elapsed.getText(), e)) elapsed.setText(e);
+            if (!TextUtils.equals(remaining.getText(), r)) remaining.setText(r);
+        }
+        if (on == (progressRow.getVisibility() == View.VISIBLE)) return;
+        progressRow.animate().cancel();
+        progressRow.setAlpha(1f);
+        progressRow.setVisibility(on ? View.VISIBLE : View.INVISIBLE);
+        if (on && animations && isOpen() && !progress.songChanged()) {
+            progressRow.setAlpha(0f);
+            progressRow.animate().alpha(1f).setDuration(240).start();
+        }
+    }
+
     /** The source glyph (already trimmed to its visible box), its right edge at x 652 and centred on the buttons. */
     void setSource(Bitmap glyph) {
         source.setImageBitmap(glyph);
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) source.getLayoutParams();
         lp.leftMargin = px(652) - glyph.getWidth();
-        lp.topMargin = px(880) - glyph.getHeight() / 2;
+        lp.topMargin = px(950) - glyph.getHeight() / 2;
         source.setLayoutParams(lp);
     }
 
@@ -343,6 +398,47 @@ final class LyricsScreen {
         p.setShader(new RadialGradient(cx, cy, r * 1.6f, (a << 24) | (color & 0xFFFFFF), color & 0xFFFFFF,
                 Shader.TileMode.CLAMP));
         canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), p);
+    }
+
+    /**
+     * The progress bar: a capsule track, and the same capsule filled up to the playhead, cut straight there. The two
+     * parts never overlap, so each keeps its own colour.
+     */
+    private static final class SongBar extends View {
+        private final Paint track = new Paint(Paint.ANTI_ALIAS_FLAG), fill = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final RectF capsule = new RectF();
+        private float fraction;
+
+        SongBar(Context ctx) {
+            super(ctx);
+            track.setColor(0x40FFFFFF);
+            fill.setColor(0xE6FFFFFF);
+            setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        }
+
+        void setFraction(float f) {
+            if (f == fraction) return;
+            fraction = f;
+            invalidate();
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            float w = getWidth(), h = getHeight(), r = h / 2f, fillW = w * Math.max(0f, Math.min(1f, fraction));
+            capsule.set(0, 0, w, h);
+            if (fillW < w) {
+                int save = canvas.save();
+                canvas.clipRect(fillW, 0, w, h);
+                canvas.drawRoundRect(capsule, r, r, track);
+                canvas.restoreToCount(save);
+            }
+            if (fillW > 0) {
+                int save = canvas.save();
+                canvas.clipRect(0, 0, fillW, h);
+                canvas.drawRoundRect(capsule, r, r, fill);
+                canvas.restoreToCount(save);
+            }
+        }
     }
 
     /** The lyrics column: the lines fade out over its top 150 px and its bottom 240 px, as in the design's mask. */
