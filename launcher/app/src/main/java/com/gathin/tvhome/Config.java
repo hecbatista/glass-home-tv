@@ -190,6 +190,8 @@ final class Config {
     boolean spotifyConnect;
     /** lyrics: the Now Playing panel's lyrics card, from LRCLIB (Glass Home's Now Playing only). */
     boolean lyrics;
+    /** home_awake_minutes (HomeAwake): how long Home keeps the screen on; 0 leaves it to the TV. Glass Home only. */
+    int homeAwakeMinutes;
 
     static final String GLOW_RADIAL = "radial", GLOW_HORIZON = "horizon";
     /** Show each rotating wallpaper's name from wallpapers/captions.txt (config.xml / theme wallpaper_captions). */
@@ -358,6 +360,7 @@ final class Config {
         boolean nowPlaying = res.getBoolean(R.bool.now_playing);
         boolean spotifyConnect = res.getBoolean(R.bool.spotify_connect);
         boolean lyrics = res.getBoolean(R.bool.lyrics);
+        int homeAwake = res.getInteger(R.integer.home_awake_minutes);
         // Glass Home's dark background is a soft near-black rather than pure black.
         if (glassHome) background = Appearance.DARK;
         boolean cinematic = res.getBoolean(R.bool.cinematic_home);
@@ -444,6 +447,7 @@ final class Config {
             nowPlaying = bool(json, "now_playing", nowPlaying);
             spotifyConnect = bool(json, "spotify_connect", spotifyConnect);
             lyrics = bool(json, "lyrics", lyrics);
+            homeAwake = integer(json, "home_awake_minutes", homeAwake, HomeAwake.ALWAYS, 24 * 60);
         }
         // A theme push or reset invalidates choices made on the TV. On first use, remember the
         // current theme without clearing choices from an older launcher version.
@@ -506,6 +510,7 @@ final class Config {
         cfg.nowPlaying = glassHome && nowPlaying;
         cfg.spotifyConnect = cfg.nowPlaying && spotifyConnect;
         cfg.lyrics = cfg.nowPlaying && lyrics;
+        cfg.homeAwakeMinutes = cfg.glassHome ? HomeAwake.chosen(choices.getInt(HomeAwake.KEY, Integer.MIN_VALUE), homeAwake) : 0;
         return cfg;
     }
 
@@ -550,12 +555,12 @@ final class Config {
             SharedPreferences.Editor editor = choices.edit();
             if (!"absent".equals(token)) editor.remove("columns").remove("animations")
                     .remove("advanced_effects").remove(ROWS_BELOW_DOCK_KEY).remove(WALLPAPER_CHOICE_KEY)
-                    .remove(DOCK_OPACITY_KEY).remove(BACKGROUND_KEY);
+                    .remove(DOCK_OPACITY_KEY).remove(BACKGROUND_KEY).remove(HomeAwake.KEY);
             editor.putString(THEME_SIGNATURE_KEY, signature).commit();
         } else if (!seen.equals(signature)) {
             choices.edit().remove("columns").remove("animations").remove("advanced_effects")
                     .remove(ROWS_BELOW_DOCK_KEY).remove(WALLPAPER_CHOICE_KEY).remove(DOCK_OPACITY_KEY)
-                    .remove(BACKGROUND_KEY).putString(THEME_SIGNATURE_KEY, signature).commit();
+                    .remove(BACKGROUND_KEY).remove(HomeAwake.KEY).putString(THEME_SIGNATURE_KEY, signature).commit();
         }
     }
 

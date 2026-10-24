@@ -156,6 +156,9 @@
     <string name="np_play">Play</string>
     <string name="np_pause">Pause</string>
     <string name="np_next">Next</string>
+    <!-- Glass Home's full-screen lyrics, for a song LRCLIB has no synced lyrics for. -->
+    <string name="lyrics_none">No synced lyrics for this song</string>
+    <string name="lyrics_open">Lyrics, full screen</string>
     <!-- Glass Home: the round button beside Settings, the label shown under it when focused and the title of the
          Launcher settings screen it opens. -->
     <string name="appearance">Customize Home</string>
@@ -173,4 +176,12 @@
     <string name="glass_dock_label">Dock glass</string>
     <string name="glass_dock_solid">Solid</string>
     <string name="glass_follow_theme">Reset to Defaults</string>
+    <!-- Glass Home's Launcher settings: how long Home keeps the screen on (home_awake_minutes). -->
+    <string name="home_awake_label">Keep Home on</string>
+    <string name="home_awake_tv">TV setting</string>
+    <string name="home_awake_30">30 min</string>
+    <string name="home_awake_60">1 hour</string>
+    <string name="home_awake_120">2 hours</string>
+    <string name="home_awake_always">Always</string>
+    <string name="home_awake_hint">After this long without a button press on Home, the TV\'s own screensaver and sleep timer take over. Apps are not affected.</string>
 </resources>

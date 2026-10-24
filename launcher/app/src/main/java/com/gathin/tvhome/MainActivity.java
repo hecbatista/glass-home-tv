@@ -56,6 +56,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.SoundEffectConstants;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -118,6 +119,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     /** Idle time on Home before ClockActivity; 0 is off (config.xml, home_idle_clock_minutes). */
     private long idleClockMs;
     private final Runnable showIdleClock = () -> startActivity(new Intent(this, ClockActivity.class));
+    /** home_awake_minutes (HomeAwake): how long Home keeps the screen on after the last key; 0 leaves it to the TV. */
+    private int homeAwakeMinutes;
+    private final Runnable releaseAwake = () -> getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     private String liveTvAction;
     private String liveTvInputId;
     /** The app library is on (config.xml, app_library): only then can the tile menu take an app off Home. */
@@ -382,6 +386,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         festive = festival.active(LocalDate.now());
         liveTvPkg = cfg.liveTvPackage;
         idleClockMs = cfg.homeIdleClockMinutes * MINUTE_MS;
+        homeAwakeMinutes = cfg.homeAwakeMinutes;
         bootToLiveTv = cfg.bootToLiveTv;
         liveTvAction = cfg.liveTvAction;
         liveTvInputId = cfg.liveTvInputId;
@@ -890,6 +895,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onResume() {
         super.onResume();
+        holdAwake();
         // A festival that started or ended while Home was in the background: rebuild with or without it.
         if (festive != festival.active(LocalDate.now())) {
             recreate();
@@ -1091,6 +1097,18 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     public void onUserInteraction() {
         super.onUserInteraction();
         restartIdleClock();
+        holdAwake();
+    }
+
+    /**
+     * Keeps the screen on while Home shows, for home_awake_minutes after the last key. Then the flag goes and the TV's
+     * own screensaver and sleep timer run as usual: with no key pressed for longer than their time, that is at once.
+     */
+    private void holdAwake() {
+        root.removeCallbacks(releaseAwake);
+        if (homeAwakeMinutes == 0) return;
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        if (homeAwakeMinutes > 0) root.postDelayed(releaseAwake, homeAwakeMinutes * MINUTE_MS);
     }
 
     private void restartIdleClock() {
@@ -1102,6 +1120,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     protected void onPause() {
         super.onPause();
         root.removeCallbacks(showIdleClock);
+        root.removeCallbacks(releaseAwake);
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         endReorder();   // Home or another app while reordering keeps the order so far
         wallpaperPlayer.stop();
         stopAmbientAnimation();
@@ -1209,6 +1229,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
      */
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
+        // The full-screen lyrics take the remote while they are up; OK still reaches their focused button.
+        if (nowPlaying != null && nowPlaying.isScreenOpen()) {
+            return nowPlaying.onScreenKey(event) || super.dispatchKeyEvent(event);
+        }
         if (handleSettingsKey(event)) return true;
         if (tileMenuEnabled && !reordering && openPopup == null && cardPrompt == null
                 && event.getKeyCode() == KeyEvent.KEYCODE_MENU) {

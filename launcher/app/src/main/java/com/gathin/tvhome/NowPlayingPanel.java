@@ -113,16 +113,25 @@ final class NowPlayingPanel {
     /** The song the card is for, its lyrics once found (null while looking, or when there are none). */
     private String lyricsKey;
     private Lyrics lyrics;
+    /** The lookup for the song now showing has finished, so no lyrics means it has none. */
+    private boolean lyricsKnown;
     /** Lookups already made, by song: synced lyrics, or none (so a song without them is not asked again). */
     private final Map<String, LrcLib.Result> lyricsCache = new java.util.LinkedHashMap<String, LrcLib.Result>(32, 0.75f, true) {
         @Override protected boolean removeEldestEntry(Map.Entry<String, LrcLib.Result> e) { return size() > 40; }
     };
     private final PlaybackClock clock = new PlaybackClock();
+    /** The full-screen lyrics (LyricsScreen), opened with OK on the cover; null without lyrics. */
+    private final LyricsScreen screen;
+    /** The cover at its own size, for the full-screen view (the panel keeps a small copy). */
+    private Bitmap fullArt;
     private static final long LYRICS_TICK_MS = 200;
     private final Runnable lyricsTick = new Runnable() {
         @Override public void run() {
             if (lyrics != null && panel.getVisibility() == View.VISIBLE) {
                 lyricsCard.show(lyrics.indexAt(clock.positionAt(SystemClock.elapsedRealtime())));
+            }
+            if (lyrics != null && screen != null && screen.isOpen()) {
+                screen.show(lyrics.indexAt(clock.positionAt(SystemClock.elapsedRealtime())));
             }
             main.postDelayed(this, LYRICS_TICK_MS);
         }
@@ -194,6 +203,19 @@ final class NowPlayingPanel {
         });
         art.setClipToOutline(true);
         row.addView(art, new LinearLayout.LayoutParams(artPx, artPx));
+        if (lyricsEnabled) {
+            // OK on the cover opens the full-screen lyrics. Focused, it gets Home's white ring inside its corners.
+            art.setFocusable(true);
+            art.setContentDescription(ctx.getString(R.string.lyrics_open));
+            GradientDrawable ring = new GradientDrawable();
+            ring.setCornerRadius(dp(14));
+            ring.setStroke(dp(3), light ? Appearance.INK_DARK : 0xF5FFFFFF);
+            StateListDrawable focusRing = new StateListDrawable();
+            focusRing.addState(new int[]{android.R.attr.state_focused}, ring);
+            focusRing.addState(new int[]{}, new GradientDrawable());
+            art.setForeground(focusRing);
+            art.setOnClickListener(v -> openScreen());
+        }
 
         LinearLayout text = new LinearLayout(ctx);
         text.setOrientation(LinearLayout.VERTICAL);
@@ -258,28 +280,27 @@ final class NowPlayingPanel {
         sourceLp.gravity = Gravity.CENTER_VERTICAL;
         controls.addView(source, sourceLp);
 
-        prev.setOnClickListener(v -> {
-            if (remoteShown) remoteControl(SpotifyApi.Action.PREVIOUS);
-            else if (controller != null) controller.getTransportControls().skipToPrevious();
-        });
-        next.setOnClickListener(v -> {
-            if (remoteShown) remoteControl(SpotifyApi.Action.NEXT);
-            else if (controller != null) controller.getTransportControls().skipToNext();
-        });
-        playPause.setOnClickListener(v -> {
-            if (remoteShown) remoteControl(playing ? SpotifyApi.Action.PAUSE : SpotifyApi.Action.PLAY);
-            else if (controller == null) return;
-            else if (playing) controller.getTransportControls().pause();
-            else controller.getTransportControls().play();
-        });
+        prev.setOnClickListener(v -> previous());
+        next.setOnClickListener(v -> skipNext());
+        playPause.setOnClickListener(v -> togglePlay());
         View.OnKeyListener keys = (v, keyCode, event) -> {
             if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
             if (keyCode == KeyEvent.KEYCODE_DPAD_UP) { exits.up(); return true; }
             if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) { exits.down(); return true; }
-            // The row's ends: stay on the panel instead of jumping to a tile or the top bar.
-            if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) return v == prev;
+            // The row's ends: stay on the panel instead of jumping to a tile or the top bar. Left of Previous is the
+            // cover when it opens the full-screen lyrics.
+            if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT && v == prev && art.isFocusable()) {
+                art.requestFocus();
+                return true;
+            }
+            if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && v == art) {
+                prev.requestFocus();
+                return true;
+            }
+            if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) return v == prev || v == art;
             return keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && v == next;
         };
+        art.setOnKeyListener(keys);
         prev.setOnKeyListener(keys);
         playPause.setOnKeyListener(keys);
         next.setOnKeyListener(keys);
@@ -293,6 +314,59 @@ final class NowPlayingPanel {
         // The same right edge as the top bar's buttons and the dock band: the header's 56dp padding.
         lp.setMarginEnd(dp(56));
         root.addView(panel, lp);
+        screen = !lyricsEnabled ? null : new LyricsScreen(ctx, root, density, animations, new LyricsScreen.Controls() {
+            @Override public void previous() { NowPlayingPanel.this.previous(); }
+            @Override public void playPause() { togglePlay(); }
+            @Override public void next() { skipNext(); }
+            @Override public void closed() { if (panel.getVisibility() == View.VISIBLE) art.requestFocus(); }
+        });
+    }
+
+    private void previous() {
+        if (remoteShown) remoteControl(SpotifyApi.Action.PREVIOUS);
+        else if (controller != null) controller.getTransportControls().skipToPrevious();
+    }
+
+    private void skipNext() {
+        if (remoteShown) remoteControl(SpotifyApi.Action.NEXT);
+        else if (controller != null) controller.getTransportControls().skipToNext();
+    }
+
+    private void togglePlay() {
+        if (remoteShown) remoteControl(playing ? SpotifyApi.Action.PAUSE : SpotifyApi.Action.PLAY);
+        else if (controller == null) return;
+        else if (playing) controller.getTransportControls().pause();
+        else controller.getTransportControls().play();
+    }
+
+    /** The full-screen lyrics for the song now showing. */
+    private void openScreen() {
+        if (screen == null) return;
+        syncScreen();
+        screen.setLyrics(lyrics, lyricsKnown);
+        screen.open();
+        if (lyrics != null) screen.show(lyrics.indexAt(clock.positionAt(SystemClock.elapsedRealtime())));
+    }
+
+    /** Copies the panel's song, buttons and cover to the full-screen view; it skips what has not changed. */
+    private void syncScreen() {
+        if (screen == null) return;
+        screen.setSong(title.getText(), artist.getVisibility() == View.VISIBLE ? artist.getText() : "");
+        screen.setPlaying(playing);
+        screen.setSkips(prev.getAlpha(), next.getAlpha());
+        screen.setCover(fullArt);
+        if (source.getDrawable() instanceof android.graphics.drawable.BitmapDrawable) {
+            screen.setSource(((android.graphics.drawable.BitmapDrawable) source.getDrawable()).getBitmap());
+        }
+    }
+
+    boolean isScreenOpen() {
+        return screen != null && screen.isOpen();
+    }
+
+    /** Keys while the full-screen lyrics are up (LyricsScreen.onKey); false lets OK reach the focused button. */
+    boolean onScreenKey(KeyEvent event) {
+        return screen != null && screen.isOpen() && screen.onKey(event);
     }
 
     private int dp(float v) {
@@ -369,6 +443,7 @@ final class NowPlayingPanel {
             lyricsLookup = null;
         }
         stopPolling();
+        if (screen != null) screen.close();
         if (sessions != null) sessions.removeOnActiveSessionsChangedListener(sessionsChanged);
         dropAll();
     }
@@ -566,6 +641,7 @@ final class NowPlayingPanel {
             artSource = cover;
             setArt(m, cover);
         }
+        if (screen != null && screen.isOpen()) syncScreen();
         if (panel.getVisibility() != View.VISIBLE && placed && !suppressed) {
             panel.setAlpha(0f);
             panel.setVisibility(View.VISIBLE);
@@ -593,6 +669,7 @@ final class NowPlayingPanel {
             artSource = cover;
             applyArt(cover);
         }
+        if (screen != null && screen.isOpen()) syncScreen();
         if (panel.getVisibility() != View.VISIBLE && placed && !suppressed) {
             panel.setAlpha(0f);
             panel.setVisibility(View.VISIBLE);
@@ -662,9 +739,11 @@ final class NowPlayingPanel {
     private void lyricsFor(String key, String song, String by, String album, long durationMs) {
         if (!lyricsEnabled || lyricsLookup == null || key.equals(lyricsKey)) return;
         lyricsKey = key;
+        lyricsKnown = false;
         showLyrics(null);
         LrcLib.Result cached = lyricsCache.get(key);
         if (cached != null) {
+            lyricsKnown = true;
             showLyrics(cached.lyrics);
             return;
         }
@@ -679,7 +758,9 @@ final class NowPlayingPanel {
             final LrcLib.Result result = found;
             main.post(() -> {
                 if (result != null) lyricsCache.put(key, result);
-                if (key.equals(lyricsKey) && result != null) showLyrics(result.lyrics);
+                if (!key.equals(lyricsKey)) return;
+                lyricsKnown = true;
+                showLyrics(result == null ? null : result.lyrics);
             });
         });
     }
@@ -688,6 +769,10 @@ final class NowPlayingPanel {
     private void showLyrics(Lyrics l) {
         lyrics = l;
         lyricsCard.setLyrics(l);
+        if (screen != null && screen.isOpen()) {
+            screen.setLyrics(l, lyricsKnown);
+            if (l != null) screen.show(l.indexAt(clock.positionAt(SystemClock.elapsedRealtime())));
+        }
         boolean on = l != null;
         if (on == (lyricsCard.view().getVisibility() == View.VISIBLE)) return;
         divider.setVisibility(on ? View.VISIBLE : View.GONE);
@@ -721,6 +806,7 @@ final class NowPlayingPanel {
             lyricsKey = null;
             showLyrics(null);
         }
+        if (screen != null) screen.close();
         boolean hadFocus = panel.hasFocus();
         panel.setVisibility(View.GONE);
         artKey = null;
@@ -751,6 +837,8 @@ final class NowPlayingPanel {
 
     /** The cover, or the music glyph on a soft tile when there is none. */
     private void applyArt(Bitmap bmp) {
+        fullArt = bmp;
+        if (screen != null && screen.isOpen()) screen.setCover(bmp);
         if (bmp != null) {
             art.setBackground(null);
             art.setPadding(0, 0, 0, 0);

@@ -26,6 +26,8 @@ public final class LauncherSettingsActivity extends Activity {
     private final TextView[] dockChoices = new TextView[DOCK_OPACITIES.length];
     private final TextView[] backgroundChoices = new TextView[Appearance.COLOURS.length];
     private int background;
+    private final TextView[] awakeChoices = new TextView[HomeAwake.CHOICES.length];
+    private int homeAwake;
     private TextView wallpaperChoice;
     private TextView animationsChoice;
     private TextView advancedChoice;
@@ -56,6 +58,7 @@ public final class LauncherSettingsActivity extends Activity {
         rowsBelowDock = config.rowsBelowDock;
         dockOpacity = config.dockOpacity;
         background = config.backgroundColor;
+        homeAwake = config.homeAwakeMinutes;
         animations = config.animations;
         advancedEffects = config.animations && config.advancedEffects;
 
@@ -108,8 +111,21 @@ public final class LauncherSettingsActivity extends Activity {
                 refresh();
             });
         }
+        int[] awakeIds = {R.id.awakeTv, R.id.awake30, R.id.awake60, R.id.awake120, R.id.awakeAlways};
+        for (int i = 0; i < awakeIds.length; i++) {
+            final int value = HomeAwake.CHOICES[i];
+            awakeChoices[i] = findViewById(awakeIds[i]);
+            awakeChoices[i].setOnClickListener(v -> {
+                if (homeAwake == value) return;
+                homeAwake = value;
+                choices.edit().putInt(HomeAwake.KEY, value).apply();
+                changed();
+                refresh();
+            });
+        }
         if (!config.glassHome) {
-            for (int id : new int[]{R.id.backgroundLabel, R.id.backgroundRow1, R.id.backgroundRow2}) {
+            for (int id : new int[]{R.id.backgroundLabel, R.id.backgroundRow1, R.id.backgroundRow2,
+                    R.id.awakeLabel, R.id.awakeRow, R.id.awakeHint}) {
                 findViewById(id).setVisibility(View.GONE);
             }
         } else {
@@ -151,12 +167,13 @@ public final class LauncherSettingsActivity extends Activity {
             if (!hasOnTvChoices()) return;
             choices.edit().remove("columns").remove(Config.ROWS_BELOW_DOCK_KEY).remove("animations")
                     .remove("advanced_effects").remove(Config.WALLPAPER_CHOICE_KEY)
-                    .remove(Config.DOCK_OPACITY_KEY).remove(Config.BACKGROUND_KEY).commit();
+                    .remove(Config.DOCK_OPACITY_KEY).remove(Config.BACKGROUND_KEY).remove(HomeAwake.KEY).commit();
             Config current = Config.load(this);
             columns = current.columns;
             rowsBelowDock = current.rowsBelowDock;
             dockOpacity = current.dockOpacity;
             background = current.backgroundColor;
+            homeAwake = current.homeAwakeMinutes;
             animations = current.animations;
             advancedEffects = current.animations && current.advancedEffects;
             changed();
@@ -195,8 +212,9 @@ public final class LauncherSettingsActivity extends Activity {
         glass.section(findViewById(R.id.rowsLabel), R.string.glass_rows_label);
         glass.section(findViewById(R.id.dockLabel), R.string.glass_dock_label);
         glass.section(findViewById(R.id.backgroundLabel), 0);
+        glass.section(findViewById(R.id.awakeLabel), 0);
         // The first section sits 36 px under Reorder Apps, as the others sit under their choices.
-        for (int id : new int[]{R.id.columnsRow, R.id.rowsRow, R.id.dockRow, R.id.backgroundRow1}) {
+        for (int id : new int[]{R.id.columnsRow, R.id.rowsRow, R.id.dockRow, R.id.backgroundRow1, R.id.awakeRow}) {
             glass.choiceRow(findViewById(id), 12);
         }
         for (int id : new int[]{R.id.wallpaperChoice, R.id.animationsChoice, R.id.advancedChoice, R.id.followThemeChoice}) {
@@ -205,7 +223,7 @@ public final class LauncherSettingsActivity extends Activity {
         glass.rowPill(findViewById(R.id.defaultHomeChoice), true);
         glass.rowPill(findViewById(R.id.tvSettingsChoice), true);
         ((TextView) findViewById(R.id.followThemeChoice)).setText(R.string.glass_follow_theme);
-        for (int id : new int[]{R.id.advancedHint, R.id.followHint, R.id.homeHint}) glass.hint(findViewById(id));
+        for (int id : new int[]{R.id.advancedHint, R.id.followHint, R.id.homeHint, R.id.awakeHint}) glass.hint(findViewById(id));
         // Sections 36 px apart: the rows below the choices start one section gap under them.
         for (int id : new int[]{R.id.wallpaperChoice, R.id.followThemeChoice, R.id.defaultHomeChoice}) {
             ((ViewGroup.MarginLayoutParams) findViewById(id).getLayoutParams()).topMargin = Math.round(18 * getResources().getDisplayMetrics().density);
@@ -329,6 +347,10 @@ public final class LauncherSettingsActivity extends Activity {
                     getString(R.string.background_grey), getString(R.string.background_dark),
                     getString(R.string.background_navy), getString(R.string.background_plum),
                     getString(R.string.background_pine)}, indexOf(Appearance.COLOURS, background), Appearance.COLOURS);
+            glassLabels(awakeChoices, new CharSequence[]{getString(R.string.home_awake_tv),
+                    getString(R.string.home_awake_30), getString(R.string.home_awake_60),
+                    getString(R.string.home_awake_120), getString(R.string.home_awake_always)},
+                    indexOf(HomeAwake.CHOICES, homeAwake), null);
             followThemeChoice.setSelected(false);
             followThemeChoice.setAlpha(hasOnTvChoices() ? 1f : 0.5f);
         }
@@ -338,7 +360,7 @@ public final class LauncherSettingsActivity extends Activity {
         return choices.contains("columns") || choices.contains(Config.ROWS_BELOW_DOCK_KEY)
                 || choices.contains("animations") || choices.contains("advanced_effects")
                 || choices.contains(Config.WALLPAPER_CHOICE_KEY) || choices.contains(Config.DOCK_OPACITY_KEY)
-                || choices.contains(Config.BACKGROUND_KEY);
+                || choices.contains(Config.BACKGROUND_KEY) || choices.contains(HomeAwake.KEY);
     }
 
     private void open(Intent intent) {

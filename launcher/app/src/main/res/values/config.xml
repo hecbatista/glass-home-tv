@@ -60,6 +60,10 @@
          LRCLIB (lrclib.net, free, no key), growing the panel upward. Songs without synced lyrics keep the plain panel.
          Needs now_playing. A theme can set "lyrics" too. -->
     <bool name="lyrics">true</bool>
+    <!-- Glass Home: how many minutes Home keeps the screen on after the last button press, before the TV's own
+         screensaver and sleep timer take over (0, the default, leaves it to the TV; -1 keeps it on while Home shows).
+         Launcher settings offers 30 minutes, 1 hour, 2 hours and always. A theme can set "home_awake_minutes" too. -->
+    <integer name="home_awake_minutes">0</integer>
 
     <!-- Open the Live TV app above the first time Home comes up after the TV is switched on, for sets that are
          mostly used for broadcast TV. Once per boot: Home after that stays Home. Can also be set with
