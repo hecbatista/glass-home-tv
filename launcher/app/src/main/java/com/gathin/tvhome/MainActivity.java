@@ -413,6 +413,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         glass = findViewById(R.id.glass);
         if (festive) glass.setAccent(festival.accentColor());
         if (lightInk) glass.setOnLight(true);
+        // Glass Home: the focused tile keeps the white border, without the old white glass over its banner.
+        if (glassHome) glass.setBorderOnly(true);
         ambient = findViewById(R.id.ambient);
         if (glassHome) {
             // The liquid glass reads the glow behind it from the same mask and colour as the ambient view.

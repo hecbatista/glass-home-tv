@@ -28,6 +28,8 @@ public class GlassView extends View {
     private int glowAlpha = 0x30;
     /** Glass Home on a light background: the glow becomes a soft shadow and the rim a fine dark edge. */
     private boolean onLight;
+    /** Glass Home: the rim and its glow only, with no white fill or sheen over the tile (setBorderOnly). */
+    private boolean borderOnly;
 
     public GlassView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -47,6 +49,12 @@ public class GlassView extends View {
     void setOnLight(boolean light) {
         onLight = light;
         setAccent(0);
+    }
+
+    /** Draws the rim and its glow only: the tile shows through untinted, framed by the white border. */
+    void setBorderOnly(boolean on) {
+        borderOnly = on;
+        invalidate();
     }
 
     /** Tints the rim and the outer glow; 0 restores the plain white glass. */
@@ -100,6 +108,10 @@ public class GlassView extends View {
             canvas.drawRoundRect(rect.left - o, rect.top - o, rect.right + o, rect.bottom + o, radius + o, radius + o, glow);
         }
 
+        if (borderOnly) {
+            canvas.drawRoundRect(rect, radius, radius, rim);
+            return;
+        }
         canvas.drawRoundRect(rect, radius, radius, fill);
 
         // Sheen across the top 45%: clipRect stays on the GPU (clipPath did not on the MT5895) and
