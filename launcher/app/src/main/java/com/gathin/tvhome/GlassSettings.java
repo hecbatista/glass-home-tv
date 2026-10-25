@@ -17,6 +17,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -106,7 +107,8 @@ final class GlassSettings {
         }
     }
 
-    private void pill(TextView v) {
+    /** A pill's background: Home's solid focus pill, flat glass at rest. */
+    StateListDrawable background() {
         float radius = dp(24);
         GradientDrawable focused = new GradientDrawable();
         focused.setCornerRadius(radius);
@@ -119,7 +121,60 @@ final class GlassSettings {
         StateListDrawable states = new StateListDrawable();
         states.addState(new int[]{android.R.attr.state_focused}, focused);
         states.addState(new int[]{}, rest);
-        v.setBackground(states);
+        return states;
+    }
+
+    /**
+     * A full-width row with its label at the left and a value at the right, before an optional chevron ("Alarm and
+     * Sleep … 7:00 AM ›", "Time … 7:00 AM"). The row takes focus; both texts follow its focus colours. Returns the
+     * value view.
+     */
+    TextView valueRow(LinearLayout row, TextView label, boolean chevron, int valueAlpha) {
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setBackground(background());
+        row.setFocusable(true);
+        row.setClickable(true);
+        row.setPaddingRelative(dp(20), 0, dp(20), 0);
+        ViewGroup.LayoutParams rlp = row.getLayoutParams();
+        if (rlp != null) {
+            rlp.height = dp(48);
+            row.setLayoutParams(rlp);
+        }
+        styleText(label);
+        label.setDuplicateParentStateEnabled(true);
+        row.addView(label, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        TextView value = new TextView(activity);
+        styleText(value);
+        value.setDuplicateParentStateEnabled(true);
+        value.setTextColor(new ColorStateList(new int[][]{{android.R.attr.state_focused}, {}},
+                new int[]{Appearance.withAlphaOf(valueAlpha << 24, focusedInk()), Appearance.withAlphaOf(valueAlpha << 24, ink)}));
+        value.setFontFeatureSettings("tnum");
+        row.addView(value, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        if (chevron) {
+            ImageView icon = new ImageView(activity);
+            icon.setImageResource(R.drawable.ic_chevron_right);
+            icon.setDuplicateParentStateEnabled(true);
+            icon.setImageTintList(new ColorStateList(new int[][]{{android.R.attr.state_focused}, {}},
+                    new int[]{focusedInk(), Appearance.withAlphaOf(0x99FFFFFF, ink)}));
+            LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(dp(17), dp(17));
+            ilp.setMarginStart(dp(12));
+            row.addView(icon, ilp);
+        }
+        return value;
+    }
+
+    private void styleText(TextView v) {
+        v.setTextColor(Appearance.pillText(light));
+        v.setTypeface(semibold);
+        v.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f);
+        v.setLetterSpacing(-0.01f);
+        v.setIncludeFontPadding(false);
+        v.setSingleLine(true);
+    }
+
+    private void pill(TextView v) {
+        v.setBackground(background());
         v.setTextColor(Appearance.pillText(light));
         v.setTypeface(semibold);
         v.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f);

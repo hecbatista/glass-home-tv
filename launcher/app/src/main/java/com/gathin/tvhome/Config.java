@@ -190,6 +190,10 @@ final class Config {
     boolean spotifyConnect;
     /** lyrics: the Now Playing panel's lyrics card, from LRCLIB (Glass Home's Now Playing only). */
     boolean lyrics;
+    /** alarm_clock: the alarm in Launcher settings and its sunrise (AlarmScheduler). Glass Home only. */
+    boolean alarmClock;
+    /** sleep_mode: hold Menu in any app to dim the screen (SleepMode, through HomeKeyService). Glass Home only. */
+    boolean sleepMode;
     /** home_awake_minutes (HomeAwake): how long Home keeps the screen on; 0 leaves it to the TV. Glass Home only. */
     int homeAwakeMinutes;
 
@@ -360,6 +364,8 @@ final class Config {
         boolean nowPlaying = res.getBoolean(R.bool.now_playing);
         boolean spotifyConnect = res.getBoolean(R.bool.spotify_connect);
         boolean lyrics = res.getBoolean(R.bool.lyrics);
+        boolean alarmClock = res.getBoolean(R.bool.alarm_clock);
+        boolean sleepMode = res.getBoolean(R.bool.sleep_mode);
         int homeAwake = res.getInteger(R.integer.home_awake_minutes);
         // Glass Home's dark background is a soft near-black rather than pure black.
         if (glassHome) background = Appearance.DARK;
@@ -447,6 +453,8 @@ final class Config {
             nowPlaying = bool(json, "now_playing", nowPlaying);
             spotifyConnect = bool(json, "spotify_connect", spotifyConnect);
             lyrics = bool(json, "lyrics", lyrics);
+            alarmClock = bool(json, "alarm_clock", alarmClock);
+            sleepMode = bool(json, "sleep_mode", sleepMode);
             homeAwake = integer(json, "home_awake_minutes", homeAwake, HomeAwake.ALWAYS, 24 * 60);
         }
         // A theme push or reset invalidates choices made on the TV. On first use, remember the
@@ -510,6 +518,8 @@ final class Config {
         cfg.nowPlaying = glassHome && nowPlaying;
         cfg.spotifyConnect = cfg.nowPlaying && spotifyConnect;
         cfg.lyrics = cfg.nowPlaying && lyrics;
+        cfg.alarmClock = cfg.glassHome && alarmClock;
+        cfg.sleepMode = cfg.glassHome && sleepMode;
         cfg.homeAwakeMinutes = cfg.glassHome ? HomeAwake.chosen(choices.getInt(HomeAwake.KEY, Integer.MIN_VALUE), homeAwake) : 0;
         return cfg;
     }

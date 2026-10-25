@@ -39,6 +39,8 @@ public final class LauncherSettingsActivity extends Activity {
     private boolean advancedEffects;
     /** Glass Home's look for this screen (GlassSettings); null keeps the original one. */
     private GlassSettings glass;
+    /** Glass Home with alarm_clock: the "Alarm and Sleep" row's value ("7:00 AM", "Off"). */
+    private TextView alarmValue;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -199,6 +201,18 @@ public final class LauncherSettingsActivity extends Activity {
         reorder.setText(R.string.glass_reorder);
         glass.rowPill(reorder, true);
         ((ViewGroup.MarginLayoutParams) reorder.getLayoutParams()).topMargin = Math.round(14 * getResources().getDisplayMetrics().density);
+        if (config.alarmClock) {
+            // "Alarm and Sleep", right under Reorder Apps: the alarm changes nightly, so it gets its own screen.
+            LinearLayout content = findViewById(R.id.settingsContent);
+            LinearLayout alarm = new LinearLayout(this);
+            LinearLayout.LayoutParams alp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0);
+            alp.topMargin = Math.round(12 * getResources().getDisplayMetrics().density);
+            content.addView(alarm, content.indexOfChild(reorder) + 1, alp);
+            TextView label = new TextView(this);
+            label.setText(R.string.alarm_and_sleep);
+            alarmValue = glass.valueRow(alarm, label, true, 0x9E);
+            alarm.setOnClickListener(v -> startActivity(new Intent(this, AlarmSettingsActivity.class)));
+        }
         // All six backgrounds in one row, like the other choices.
         LinearLayout first = findViewById(R.id.backgroundRow1);
         LinearLayout second = findViewById(R.id.backgroundRow2);
@@ -243,6 +257,25 @@ public final class LauncherSettingsActivity extends Activity {
     private static int indexOf(int[] values, int value) {
         for (int i = 0; i < values.length; i++) if (values[i] == value) return i;
         return -1;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (alarmValue != null) {
+            alarmValue.setText(AlarmScheduler.isOn(this)
+                    ? android.text.format.DateFormat.getTimeFormat(this).format(new java.util.Date(alarmTime()))
+                    : getString(R.string.off));
+        }
+    }
+
+    /** Today at the alarm's hour and minute, for formatting it. */
+    private long alarmTime() {
+        int m = AlarmScheduler.minuteOfDay(this);
+        java.util.Calendar c = java.util.Calendar.getInstance();
+        c.set(java.util.Calendar.HOUR_OF_DAY, m / 60);
+        c.set(java.util.Calendar.MINUTE, m % 60);
+        return c.getTimeInMillis();
     }
 
     private void reverseRow(TextView[] views) {

@@ -46,6 +46,12 @@ public class HomeKeyService extends AccessibilityService {
     private Map<Integer, String> appScancodes = Collections.emptyMap();
     private Map<Integer, String> holdAppKeys = Collections.emptyMap();
     private Map<Integer, String> holdAppScancodes = Collections.emptyMap();
+    /** sleep_mode: held ≡ Menu dims the screen (SleepMode). */
+    private boolean sleepMode;
+    private final SleepKey sleepKey = new SleepKey();
+    private final android.os.Handler sleepTimer = new android.os.Handler(android.os.Looper.getMainLooper());
+    /** The running helper, for the alarm and sleep mode to put the TV to standby (lockScreen). */
+    private static java.lang.ref.WeakReference<HomeKeyService> running = new java.lang.ref.WeakReference<>(null);
 
     /** Waits for the user to unlock when Android binds this service at boot; null once the config is read. */
     private BroadcastReceiver unlockReceiver;
@@ -121,6 +127,8 @@ public class HomeKeyService extends AccessibilityService {
         if (repairRecord) ServiceRepair.connected(this, getClass());
         settingsKeycodes = config.settingsKeycodes;
         settingsPanel = config.settingsKeyPanel;
+        sleepMode = config.sleepMode && AlarmScheduler.prefs(this).getBoolean(SLEEP_KEY, false);
+        running = new java.lang.ref.WeakReference<>(this);
         appKeys = RemoteKeys.parseAppKeys(config.appKeys);
         appScancodes = RemoteKeys.parseAppScancodes(config.appKeys);
         RemoteKeys.applyKeyFilter(this, config.keyFilter);
@@ -164,8 +172,30 @@ public class HomeKeyService extends AccessibilityService {
         return false;
     }
 
+    /** Launcher settings' Sleep Mode switch; the helper reads it when it starts (glass-install.sh, a reboot). */
+    static final String SLEEP_KEY = "sleep_mode_on";
+
+    /** Sleep Mode was switched in Launcher settings: the running helper follows at once. */
+    static void setSleepMode(boolean on) {
+        HomeKeyService s = running.get();
+        if (s != null) s.sleepMode = on && Config.load(s).sleepMode;
+        if (!on) SleepMode.clear();
+    }
+
+    static boolean isRunning() {
+        return running.get() != null;
+    }
+
+    /** Puts the TV to standby, as the power button does; false when the helper isn't running or Android refuses. */
+    static boolean lockScreen() {
+        HomeKeyService s = running.get();
+        if (s == null || android.os.Build.VERSION.SDK_INT < 28) return false;
+        return s.performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN);
+    }
+
     @Override
     protected boolean onKeyEvent(KeyEvent event) {
+        if (sleepMode && sleepKeys(event)) return true;
         // A scancode entry is more specific than any keycode, so it goes first.
         if (RemoteKeys.handle(this, event, appScancodes.get(event.getScanCode()),
                 holdAppScancodes.get(event.getScanCode()))) return true;
@@ -195,9 +225,37 @@ public class HomeKeyService extends AccessibilityService {
         return true;
     }
 
+    /**
+     * Sleep mode's keys: the rest of a press that woke the screen, then held ≡ Menu, then a press that wakes it. True
+     * consumes the key; a short ≡ press and volume keys pass on.
+     */
+    private boolean sleepKeys(KeyEvent event) {
+        if (!SleepMode.isOn() && SleepMode.onKey(event)) return true;   // the tail of the waking press
+        switch (sleepKey.on(event.getKeyCode(), event.getAction(), event.getDownTime(), event.getEventTime())) {
+            case START:
+                SleepMode.dim(this);
+                return true;
+            case CONSUME:
+                return true;
+            default:
+                if (SleepMode.onKey(event)) return true;
+                if (event.getKeyCode() == KeyEvent.KEYCODE_MENU && event.getAction() == KeyEvent.ACTION_DOWN
+                        && event.getRepeatCount() == 0) {
+                    // The filter doesn't see Android's key repeats, so the hold is timed from the down.
+                    final long down = event.getDownTime();
+                    sleepTimer.postDelayed(() -> {
+                        if (sleepKey.held(down)) SleepMode.dim(this);
+                    }, SleepKey.HOLD_MS);
+                }
+                return false;
+        }
+    }
+
     /** Unbound by Android: the user turned the helper off, so Home doesn't put it back (ServiceRepair). */
     @Override
     public boolean onUnbind(Intent intent) {
+        running = new java.lang.ref.WeakReference<>(null);
+        SleepMode.clear();
         if (repairRecord) ServiceRepair.disconnected(this, getClass());
         return super.onUnbind(intent);
     }

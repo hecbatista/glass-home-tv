@@ -157,6 +157,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private String glowStyle;
     /** Glass Home (config glass_home), and whether its background is light enough to need dark ink. */
     private boolean glassHome, lightInk;
+    /** alarm_clock: the alarm glyph after the date (showAlarmGlyph). */
+    private boolean alarmClock;
     /** Glass Home with dock_even_padding: 44 px around and between the dock tiles. */
     private boolean evenDock;
     /** Glass Home's liquid glass for this screen (GlassMaterial.current while it is up), or null. */
@@ -402,6 +404,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         root = findViewById(R.id.root);
         root.setBackgroundColor(cfg.backgroundColor);
         glassHome = cfg.glassHome;
+        alarmClock = cfg.alarmClock;
         lightInk = glassHome && Appearance.isLight(cfg.backgroundColor);
         // root fills the window with an opaque colour (Config keeps background_color opaque), so the window's own
         // black under it is a second full-screen fill on every frame for nothing. The starting window still uses
@@ -898,6 +901,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     protected void onResume() {
         super.onResume();
         holdAwake();
+        showAlarmGlyph();
         // A festival that started or ended while Home was in the background: rebuild with or without it.
         if (festive != festival.active(LocalDate.now())) {
             recreate();
@@ -1795,6 +1799,30 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         ViewGroup.MarginLayoutParams metaLp = (ViewGroup.MarginLayoutParams) heroMeta.getLayoutParams();
         metaLp.setMarginStart(Math.round(0.5f * density));
         metaLp.topMargin = Math.round(18 * density);
+    }
+
+    /** alarm_clock: Material Symbols "alarm" after the date, at 62% ink, while the alarm rings within a day. */
+    private void showAlarmGlyph() {
+        if (!glassHome || !alarmClock) return;
+        TextView date = findViewById(R.id.date);
+        // The glyph sits 24 px after the date's text, not at the end of its full-width line.
+        ViewGroup.LayoutParams dlp = date.getLayoutParams();
+        if (dlp.width != ViewGroup.LayoutParams.WRAP_CONTENT) {
+            dlp.width = ViewGroup.LayoutParams.WRAP_CONTENT;
+            date.setLayoutParams(dlp);
+        }
+        AlarmPlan plan = AlarmScheduler.planned(this, System.currentTimeMillis());
+        boolean soon = plan != null && plan.alarmAt - System.currentTimeMillis() <= 24 * 60 * MINUTE_MS;
+        if (!soon) {
+            date.setCompoundDrawablesRelative(null, null, null, null);
+            return;
+        }
+        Drawable glyph = getDrawable(R.drawable.ic_alarm).mutate();
+        glyph.setTint(Appearance.withAlphaOf(0x9E000000, Appearance.ink(lightInk)));
+        int size = Math.round(15 * density);
+        glyph.setBounds(0, 0, size, size);
+        date.setCompoundDrawablesRelative(null, null, glyph, null);
+        date.setCompoundDrawablePadding(Math.round(12 * density));
     }
 
     /**

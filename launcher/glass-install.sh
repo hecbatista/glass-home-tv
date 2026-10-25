@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Glass Home on a Fire TV: build the launcher, install it over the running one, and switch the Home watcher
 # (HomeKeyService with stock_home_redirect) back on, since Android turns accessibility services off on reinstall.
-# It also grants the Now Playing panel its media access (NowPlayingListener), which Fire OS has no screen for.
+# It also grants the Now Playing panel its media access (NowPlayingListener), which Fire OS has no screen for, and
+# "draw over other apps" for sleep mode's dimming layer and the alarm screen.
 # Amazon's launcher stays enabled and stays the system Home; nothing is disabled.
 #
 # Usage: TV_HOST=<tv ip> launcher/glass-install.sh
@@ -23,6 +24,7 @@ case "$OUT" in *Success*) ;; *) echo "ERROR: pm install failed" >&2; exit 1 ;; e
 settings put secure enabled_accessibility_services com.gathin.tvhome/.HomeKeyService
 settings put secure accessibility_enabled 1
 cmd notification allow_listener com.gathin.tvhome/com.gathin.tvhome.NowPlayingListener
+appops set com.gathin.tvhome SYSTEM_ALERT_WINDOW allow
 cmd package compile -m speed -f com.gathin.tvhome >/dev/null
 input keyevent WAKEUP
 am start -W -n com.gathin.tvhome/.MainActivity | grep -E "Status|Error"'

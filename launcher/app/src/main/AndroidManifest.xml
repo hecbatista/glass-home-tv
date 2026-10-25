@@ -11,6 +11,12 @@
     <!-- Glass Home's spotify_connect only: the Spotify Web API (api.spotify.com, accounts.spotify.com) and covers
          (i.scdn.co). This copy of the launcher departs from the reference one here, which has no network access. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Glass Home's alarm (alarm_clock): wake the screen from standby, set it again after a reboot; sleep mode
+         (sleep_mode) dims over other apps with an overlay, granted over ADB by glass-install.sh. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <!-- Needed since Android 10 to read the Wi-Fi network name for the network pill. Never requested at
          runtime: build-and-install grants it with pm grant, so lint's Android 12 "ask for COARSE with
@@ -172,6 +178,35 @@
                 <action android:name="com.gathin.tvhome.action.SPOTIFY_UNLINK" />
             </intent-filter>
         </receiver>
+
+        <!-- alarm_clock: the sunrise's start (AlarmManager only), rescheduling after a reboot or a clock change, and a
+             test alarm the shell may send. -->
+        <receiver android:name=".AlarmReceiver" android:exported="false" />
+        <receiver android:name=".AlarmBootReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name=".AlarmTestReceiver"
+            android:exported="true"
+            android:permission="android.permission.WRITE_SECURE_SETTINGS" />
+        <activity
+            android:name=".AlarmSettingsActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
+        <activity
+            android:name=".AlarmActivity"
+            android:exported="false"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
+            android:screenOrientation="landscape"
+            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
 
         <!-- Glass Home's Now Playing panel (config now_playing): access to the media sessions, nothing else. -->
         <service

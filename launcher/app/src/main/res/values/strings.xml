@@ -159,6 +159,44 @@
     <!-- Glass Home's full-screen lyrics, for a song LRCLIB has no synced lyrics for. -->
     <string name="lyrics_none">No synced lyrics for this song</string>
     <string name="lyrics_open">Lyrics, full screen</string>
+    <!-- Glass Home's alarm (alarm_clock) and sleep mode (sleep_mode). -->
+    <string name="alarm_snooze">Snooze</string>
+    <string name="alarm_stop">Stop</string>
+    <string name="alarm_snoozed_until">Snoozed until %1$s</string>
+    <string name="alarm_test_caption">Test</string>
+    <string name="sleep_mode">Sleep Mode</string>
+    <string name="alarm_and_sleep">Alarm and Sleep</string>
+    <string name="alarm_state">Alarm: %1$s</string>
+    <string name="alarm_time">Time</string>
+    <string name="alarm_repeat">Repeat</string>
+    <string name="alarm_every_day">Every Day</string>
+    <string name="alarm_weekdays">Weekdays</string>
+    <string name="alarm_weekends">Weekends</string>
+    <string name="alarm_never">Never</string>
+    <string name="alarm_sunrise">Sunrise</string>
+    <string name="alarm_minutes">%1$d min</string>
+    <string name="alarm_sound_label">Sound</string>
+    <string name="alarm_chimes">Chimes</string>
+    <string name="alarm_harp">Harp</string>
+    <string name="alarm_light_only">Light Only</string>
+    <string name="alarm_test">Test Alarm</string>
+    <string name="alarm_off_hint">Off. Saving a new time turns it on.</string>
+    <string name="alarm_rings_in">Rings in %1$s.</string>
+    <string name="alarm_rings_on">Rings %1$s at %2$s.</string>
+    <string name="alarm_brightens_at">The screen starts to brighten at %1$s.</string>
+    <string name="alarm_editing_hint">Up and Down change it. OK saves, Back cancels.</string>
+    <plurals name="alarm_hours">
+        <item quantity="one">%d hour</item>
+        <item quantity="other">%d hours</item>
+    </plurals>
+    <plurals name="alarm_minutes_long">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <string name="sleep_mode_state">Sleep Mode: %1$s</string>
+    <!-- %1$s is replaced by the remote's Menu glyph (Material Symbols "menu"), drawn inline. -->
+    <string name="sleep_mode_hint" formatted="false">Hold %1$s for a second in any app to dim the screen. The show keeps playing. Press any button to bring the picture back.</string>
+    <string name="sleep_mode_needs">Needs Glass Home\'s remote helper and the draw-over-apps permission, set once over ADB.</string>
     <!-- Glass Home: the round button beside Settings, the label shown under it when focused and the title of the
          Launcher settings screen it opens. -->
     <string name="appearance">Customize Home</string>
