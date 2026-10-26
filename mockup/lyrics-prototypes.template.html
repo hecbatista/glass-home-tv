@@ -1,0 +1,283 @@
+<title>Glass Home Lyrics</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap">
+<style>
+/* Layout: the TV screen at its true 1920×1080 pixel grid (scaled to fit), prototype switcher above, notes below.
+   Single dark look on purpose: it is a TV screen. */
+:root {
+  color-scheme: dark;
+  --page: #08090c;
+  --ink: #f4f5f8;
+  --ink-dim: rgba(244, 245, 248, .64);
+  --ink-faint: rgba(244, 245, 248, .38);
+  --rule: rgba(255, 255, 255, .10);
+  --font: "Inter", "Helvetica Neue", Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--page); color: var(--ink); }
+body {
+  margin: 0; font-family: var(--font); -webkit-font-smoothing: antialiased;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 26px 40px;
+}
+.wrap { max-width: 1280px; margin: 0 auto; display: grid; gap: 16px; }
+.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; }
+.top h1 { margin: 0; font-size: 22px; font-weight: 650; letter-spacing: -.02em; }
+.top p { margin: 4px 0 0; font-size: 14px; color: var(--ink-dim); max-width: 62ch; }
+.seg { display: inline-flex; flex-wrap: wrap; padding: 3px; border-radius: 999px; border: 1px solid var(--rule); background: rgba(255,255,255,.04); }
+.seg button { font: 600 13px/1 var(--font); color: var(--ink-dim); background: none; border: 0; padding: 9px 14px; border-radius: 999px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: rgba(255,255,255,.92); color: #0b0c10; }
+.seg button:focus-visible { outline: 2px solid rgba(255,255,255,.7); outline-offset: 1px; }
+
+/* ---------- The TV: 1920×1080 px, scaled to the box ---------- */
+.tv { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 30px 80px rgba(0,0,0,.6); background: #000; }
+.screen { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; overflow: hidden; }
+.shot { position: absolute; inset: 0; width: 1920px; height: 1080px; display: block; max-width: none; }
+
+/* The Now Playing panel, as NowPlayingPanel.java draws it (TV px = dp × 2). */
+.panel {
+  position: absolute; left: 1049px; width: 759px; bottom: 377px; /* bottom edge at y 703 */
+  border-radius: 52px; overflow: hidden; color: #fff;
+  background: linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.07));
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.28);
+  transition: height 520ms cubic-bezier(.2,.8,.2,1);
+}
+.panel::before { content: ""; position: absolute; left: 3px; right: 3px; top: 3px; height: 52px; border-radius: 49px 49px 0 0;
+  background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,0)); pointer-events: none; }
+.row { position: absolute; left: 0; right: 0; bottom: 0; height: 223px; }
+.art { position: absolute; left: 20px; top: 20px; width: 183px; height: 183px; border-radius: 28px; overflow: hidden;
+  background:
+    radial-gradient(120px 80px at 70% 30%, rgba(255,214,140,.9), transparent 70%),
+    linear-gradient(180deg, #ff8a5c 0%, #c2457a 38%, #4b2a8f 70%, #121633 100%); }
+.art::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 58px;
+  background: linear-gradient(180deg, #1a1530, #0b0d1a); clip-path: polygon(0 40%, 18% 22%, 36% 46%, 55% 18%, 78% 44%, 100% 28%, 100% 100%, 0 100%); }
+.col { position: absolute; left: 231px; top: 20px; width: 500px; }
+.title { font-size: 34px; font-weight: 600; letter-spacing: -.01em; line-height: 41px; padding: 4px 0; white-space: nowrap; overflow: hidden; }
+.sub { font-size: 28px; font-weight: 500; letter-spacing: -.01em; line-height: 34px; padding: 4px 0; color: rgba(255,255,255,.62);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; height: 42px; position: relative; }
+.ctl { position: absolute; left: 215px; top: 119px; display: flex; }
+.ctl span { width: 84px; height: 84px; display: grid; place-items: center; }
+.ctl svg { fill: #fff; }
+.src { position: absolute; left: 693px; top: 143px; width: 24px; height: 37.7px; fill: rgba(255,255,255,.55); }
+
+/* A · the second line becomes the current lyric */
+.lyric-line { position: absolute; inset: 4px 0; color: rgba(255,255,255,.88); transition: opacity 320ms ease, transform 320ms ease; }
+.lyric-line.out { opacity: 0; transform: translateY(-10px); }
+.lyric-line.in { opacity: 0; transform: translateY(10px); }
+
+/* B · the panel grows upward with three lines */
+.lines { position: absolute; left: 32px; right: 32px; top: 30px; height: 150px; overflow: hidden;
+  -webkit-mask: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
+          mask: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent); }
+.lines-track { position: absolute; left: 0; right: 0; top: 0; transition: transform 520ms cubic-bezier(.2,.8,.2,1); }
+.lines-track div { height: 50px; line-height: 50px; font-size: 30px; font-weight: 600; letter-spacing: -.015em; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; color: rgba(255,255,255,.34); transition: color 400ms ease, font-size 400ms ease; }
+.lines-track div.now { color: #fff; font-size: 34px; }
+.divider { position: absolute; left: 28px; right: 28px; bottom: 223px; height: 2px; background: rgba(255,255,255,.12); }
+
+/* C · full-screen lyrics */
+.full { position: absolute; inset: 0; color: #fff;
+  background:
+    radial-gradient(900px 640px at 18% 30%, rgba(194,69,122,.55), transparent 70%),
+    radial-gradient(900px 700px at 80% 85%, rgba(75,42,143,.65), transparent 70%),
+    radial-gradient(700px 500px at 60% 10%, rgba(255,138,92,.35), transparent 70%),
+    #0c0b16; }
+.full .bigart { position: absolute; left: 136px; top: 196px; width: 520px; height: 520px; border-radius: 40px; overflow: hidden;
+  box-shadow: 0 40px 90px rgba(0,0,0,.45); }
+.full .bigart .art { left: 0; top: 0; width: 100%; height: 100%; border-radius: 0; }
+.full .bigart .art::after { height: 160px; }
+.full .meta { position: absolute; left: 136px; top: 752px; width: 520px; }
+.full .meta .t { font-size: 46px; font-weight: 700; letter-spacing: -.025em; line-height: 1.1; }
+.full .meta .a { margin-top: 8px; font-size: 30px; font-weight: 500; color: rgba(255,255,255,.66); display: flex; align-items: center; gap: 14px; }
+.full .meta .a svg { width: 20px; height: 31px; fill: rgba(255,255,255,.66); }
+.bar { position: absolute; left: 136px; top: 880px; width: 520px; height: 8px; border-radius: 4px; background: rgba(255,255,255,.22); overflow: hidden; }
+.bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 38%; background: rgba(255,255,255,.9); border-radius: 4px; transition: width 3s linear; }
+.times { position: absolute; left: 136px; top: 900px; width: 520px; display: flex; justify-content: space-between;
+  font-size: 22px; font-weight: 500; color: rgba(255,255,255,.55); font-variant-numeric: tabular-nums; }
+.full .lyrics { position: absolute; left: 800px; right: 112px; top: 0; bottom: 0; overflow: hidden;
+  -webkit-mask: linear-gradient(180deg, transparent 6%, #000 30%, #000 70%, transparent 94%);
+          mask: linear-gradient(180deg, transparent 6%, #000 30%, #000 70%, transparent 94%); }
+.full .lyrics-track { position: absolute; left: 0; right: 0; top: 0; transition: transform 700ms cubic-bezier(.2,.8,.2,1); }
+.full .lyrics-track div { font-size: 64px; font-weight: 700; letter-spacing: -.03em; line-height: 78px; padding: 16px 0;
+  color: rgba(255,255,255,.28); transition: color 500ms ease; text-wrap: balance; }
+.full .lyrics-track div.now { color: #fff; }
+.full .credit { position: absolute; right: 112px; bottom: 56px; font-size: 22px; font-weight: 500; color: rgba(255,255,255,.45); }
+.full .hint { position: absolute; left: 136px; top: 96px; font-size: 22px; font-weight: 600; letter-spacing: .12em;
+  text-transform: uppercase; color: rgba(255,255,255,.5); }
+
+/* ---------- Notes ---------- */
+.notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 28px; margin: 0; padding: 0; list-style: none; }
+@media (max-width: 760px) { .notes { grid-template-columns: minmax(0, 1fr); } }
+.notes li { display: grid; gap: 4px; min-width: 0; }
+.notes b { font-size: 13px; font-weight: 650; }
+.notes span { font-size: 13px; line-height: 1.55; color: var(--ink-dim); }
+.fine { font-size: 12px; color: var(--ink-faint); margin: 0; }
+@media (prefers-reduced-motion: reduce) { .screen *, .screen *::before { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>Lyrics on Glass Home</h1>
+      <p>Built on a real screenshot from your TV at 1920×1080. The music panel is redrawn at its measured position and size, so each prototype shows how it would look on the TV.</p>
+    </div>
+    <div class="seg" role="group" aria-label="Prototype">
+      <button type="button" id="v-today" data-v="today" aria-pressed="false">Today</button>
+      <button type="button" id="v-a" data-v="a" aria-pressed="true">A · Current line</button>
+      <button type="button" id="v-b" data-v="b" aria-pressed="false">B · Lyrics card</button>
+      <button type="button" id="v-c" data-v="c" aria-pressed="false">C · Full screen</button>
+    </div>
+  </div>
+
+  <div class="tv" id="tv">
+    <div class="screen" id="screen">
+      <img class="shot" id="shot-today" alt="The TV's Home screen today, with the Now Playing panel" src="data:image/jpeg;base64,__TODAY__" hidden>
+      <img class="shot" id="shot-bg" alt="The TV's Home screen with the panel area cleared for the prototypes" src="data:image/jpeg;base64,__BG__">
+
+      <!-- A and B: the panel -->
+      <div class="panel" id="panel" style="height:223px">
+        <div class="lines" id="lines" hidden><div class="lines-track" id="lines-track"></div></div>
+        <div class="divider" id="divider" hidden></div>
+        <div class="row">
+          <div class="art"></div>
+          <div class="col">
+            <div class="title">Night Drive</div>
+            <div class="sub" id="sub"><span class="lyric-line" id="lyric-a">Sample Artist · iPhone</span></div>
+          </div>
+          <div class="ctl" aria-hidden="true">
+            <span><svg viewBox="0 0 24 24" width="52" height="52"><path d="M21,6.5v11l-8,-5.5zM12,6.5v11l-8,-5.5z"/></svg></span>
+            <span><svg viewBox="0 0 24 24" width="56" height="56"><path d="M6.5,5h3.5c0.3,0 0.5,0.2 0.5,0.5v13c0,0.3 -0.2,0.5 -0.5,0.5H6.5C6.2,19 6,18.8 6,18.5v-13C6,5.2 6.2,5 6.5,5zM14,5h3.5c0.3,0 0.5,0.2 0.5,0.5v13c0,0.3 -0.2,0.5 -0.5,0.5H14c-0.3,0 -0.5,-0.2 -0.5,-0.5v-13C13.5,5.2 13.7,5 14,5z"/></svg></span>
+            <span><svg viewBox="0 0 24 24" width="52" height="52"><path d="M3,6.5v11l8,-5.5zM12,6.5v11l8,-5.5z"/></svg></span>
+          </div>
+          <svg class="src" viewBox="200 -920 560 880" aria-hidden="true"><path d="M280-40q-33 0-56.5-23.5T200-120v-720q0-33 23.5-56.5T280-920h400q33 0 56.5 23.5T760-840v720q0 33-23.5 56.5T680-40H280Zm0-120v40h400v-40H280Zm0-80h400v-480H280v480Zm0-560h400v-40H280v40Zm0 0v-40 40Zm0 640v40-40Z"/></svg>
+        </div>
+      </div>
+
+      <!-- C: full screen -->
+      <div class="full" id="full" hidden>
+        <div class="hint">Lyrics · Back to return</div>
+        <div class="bigart"><div class="art"></div></div>
+        <div class="meta">
+          <div class="t">Night Drive</div>
+          <div class="a"><svg viewBox="200 -920 560 880" aria-hidden="true"><path d="M280-40q-33 0-56.5-23.5T200-120v-720q0-33 23.5-56.5T280-920h400q33 0 56.5 23.5T760-840v720q0 33-23.5 56.5T680-40H280Zm0-120v40h400v-40H280Zm0-80h400v-480H280v480Zm0-560h400v-40H280v40Zm0 0v-40 40Zm0 640v40-40Z"/></svg>Sample Artist · iPhone</div>
+        </div>
+        <div class="bar"><i id="bar"></i></div>
+        <div class="times"><span id="t-now">1:24</span><span>3:41</span></div>
+        <div class="lyrics"><div class="lyrics-track" id="full-track"></div></div>
+        <div class="credit">Lyrics from LRCLIB</div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="notes" id="notes"></ul>
+  <p class="fine">Song, artist, cover and lyric lines are placeholders written for this mockup (real lyrics are copyrighted). Everything else, including the clock, the buttons, the dock and the panel's position, comes from the TV screenshot or the launcher's code.</p>
+</div>
+
+<script>
+(function () {
+  var LINES = [
+    "Streetlights hum along the avenue",
+    "Radio low, the windows down",
+    "Every sign is pointing back to you",
+    "Holding on to the last of the light",
+    "The city sleeps, we're driving through",
+    "Counting exits like the stars tonight",
+    "Nowhere to be, nothing left to do",
+    "Just the road and you beside me now"
+  ];
+  var NOTES = {
+    today: [
+      ["What this is", "Your Home screen as the TV drew it a few minutes ago, untouched: Drake on your iPhone, the title mid-scroll."],
+      ["Compare with", "A, B and C. They sit on the same screenshot with only the music panel redrawn."],
+      ["Lyrics source", "LRCLIB: free, no key, lines with timestamps. Popular songs are covered; niche tracks may have none."]
+    ],
+    a: [
+      ["What changes", "The line under the title shows the current lyric, changing with the song. Size and layout stay exactly as today."],
+      ["When there are none", "No lyrics found, or an instrumental: the line shows the artist and device as it does now."],
+      ["Trade-off", "Least disruption, but one line at TV distance is easy to miss, and you lose the artist line while lyrics play."]
+    ],
+    b: [
+      ["What changes", "The panel grows upward, its bottom edge fixed at the dock, to show the previous, current and next line above the song row."],
+      ["Space", "The panel's top moves from y 480 to y 292, still 78 px below the top bar. The app name on the left is untouched."],
+      ["Trade-off", "Readable from the couch while you browse Home, but a bigger panel is more to look at whenever music plays."]
+    ],
+    c: [
+      ["What changes", "Press OK on the cover to open a full-screen lyrics view, like Apple Music. Back returns to Home."],
+      ["Layout", "The cover and song sit on the left in the Home screen's 136 px margin. Large lines scroll on the right, with the current one bright, over colours taken from the cover."],
+      ["Trade-off", "The best way to actually read along. It's a new screen to build, and it needs the cover's colours worked out on the TV."]
+    ]
+  };
+  var view = "a", at = 2, timer = null;
+  var screen = document.getElementById("screen"), tv = document.getElementById("tv");
+
+  function fit() { screen.style.transform = "scale(" + (tv.clientWidth / 1920) + ")"; }
+  if (window.ResizeObserver) new ResizeObserver(fit).observe(tv); else window.addEventListener("resize", fit);
+  fit();
+
+  function fill(id) {
+    var el = document.getElementById(id);
+    el.innerHTML = LINES.map(function (l) { return "<div>" + l + "</div>"; }).join("");
+  }
+  fill("lines-track"); fill("full-track");
+
+  function showLine() {
+    var line = LINES[at % LINES.length];
+    // A: swap the second line with a short slide.
+    var a = document.getElementById("lyric-a");
+    if (view === "a") {
+      a.classList.add("out");
+      setTimeout(function () { a.textContent = line; a.classList.remove("out"); a.classList.add("in");
+        requestAnimationFrame(function () { requestAnimationFrame(function () { a.classList.remove("in"); }); }); }, 320);
+    }
+    // B: three lines, current one in the middle row.
+    var bt = document.getElementById("lines-track");
+    Array.prototype.forEach.call(bt.children, function (d, i) { d.classList.toggle("now", i === at % LINES.length); });
+    bt.style.transform = "translateY(" + (50 - (at % LINES.length) * 50) + "px)";
+    // C: big lines, current one centred on the screen.
+    var ct = document.getElementById("full-track");
+    var kids = ct.children, y = 0;
+    for (var i = 0; i < kids.length; i++) { kids[i].classList.toggle("now", i === at % LINES.length); }
+    var cur = kids[at % LINES.length];
+    y = 540 - (cur.offsetTop + cur.offsetHeight / 2);
+    ct.style.transform = "translateY(" + y + "px)";
+    var bar = document.getElementById("bar");
+    var pct = 30 + (at % LINES.length) * 7;
+    bar.style.width = pct + "%";
+    var secs = Math.round(221 * pct / 100);
+    document.getElementById("t-now").textContent = Math.floor(secs / 60) + ":" + String(secs % 60).padStart(2, "0");
+  }
+
+  function setView(v) {
+    view = v;
+    Array.prototype.forEach.call(document.querySelectorAll(".seg button"), function (b) {
+      b.setAttribute("aria-pressed", String(b.dataset.v === v));
+    });
+    document.getElementById("shot-today").hidden = v !== "today";
+    document.getElementById("shot-bg").hidden = v === "today";
+    var panel = document.getElementById("panel");
+    panel.hidden = !(v === "a" || v === "b");
+    panel.style.height = v === "b" ? "411px" : "223px";
+    document.getElementById("lines").hidden = v !== "b";
+    document.getElementById("divider").hidden = v !== "b";
+    document.getElementById("full").hidden = v !== "c";
+    var a = document.getElementById("lyric-a");
+    a.textContent = v === "a" ? LINES[at % LINES.length] : "Sample Artist · iPhone";
+    a.style.color = v === "a" ? "" : "rgba(255,255,255,.62)";
+    document.getElementById("notes").innerHTML = NOTES[v].map(function (n) {
+      return "<li><b>" + n[0] + "</b><span>" + n[1] + "</span></li>";
+    }).join("");
+    showLine();
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll(".seg button"), function (b) {
+    b.addEventListener("click", function () { setView(b.dataset.v); });
+  });
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  timer = setInterval(function () { at++; showLine(); }, reduce ? 6000 : 3200);
+  setView("a");
+})();
+</script>

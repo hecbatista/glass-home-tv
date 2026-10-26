@@ -1,0 +1,292 @@
+<title>StandBy Screensaver</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: a 1920×1080 TV stage scaled to the page, controls beside it, the alarm's two frames below to compare. */
+:root {
+  --page: #0e0e11; --panel: #17171b; --line: #2a2a31; --fg: #e9e9ee; --muted: #9a9aa6; --accent: #0a84ff;
+  --ui: "InterUI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+@font-face { font-family: "InterDisplay"; src: url(data:font/ttf;base64,__DISPLAY__) format("truetype");
+  ascent-override: 96.875%; descent-override: 24.121%; line-gap-override: 0%; }
+@font-face { font-family: "InterSemi"; src: url(data:font/ttf;base64,__SEMI__) format("truetype");
+  ascent-override: 96.875%; descent-override: 24.121%; line-gap-override: 0%; }
+@font-face { font-family: "InterMedium"; src: url(data:font/ttf;base64,__MEDIUM__) format("truetype");
+  ascent-override: 96.875%; descent-override: 24.121%; line-gap-override: 0%; }
+@font-face { font-family: "InterUI"; src: url(data:font/ttf;base64,__MEDIUM__) format("truetype"); }
+html, body { background: var(--page); color: var(--fg); }
+body { font-family: var(--ui); padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+.wrap { max-width: 1480px; margin: 0 auto; display: grid; gap: 18px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+h1 { font-family: "InterSemi", var(--ui); font-size: 22px; margin: 0; letter-spacing: -0.01em; }
+header p { margin: 0; color: var(--muted); font-size: 13px; }
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 18px; align-items: start; }
+@media (max-width: 900px) { .main { grid-template-columns: minmax(0, 1fr); } }
+.screen { width: 100%; aspect-ratio: 16 / 9; position: relative; overflow: hidden; border-radius: 10px;
+  background: #000; box-shadow: 0 0 0 1px var(--line); max-width: 100%; }
+.stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; background: #000;
+  overflow: hidden; }
+.abs { position: absolute; white-space: nowrap; }
+.glow { position: absolute; inset: 0; transition: opacity 600ms linear; }
+.face { position: absolute; inset: 0; }
+.date { font-family: "InterSemi"; font-size: 40px; letter-spacing: 0.08em; line-height: normal; text-transform: uppercase; }
+.clock { font-family: "InterDisplay"; font-size: 520px; letter-spacing: -0.03em; line-height: normal;
+  left: 0; width: 1920px; text-align: center; }
+.row { position: absolute; left: 112px; top: 744px; width: 1312px; height: 240px; }
+.cover { position: absolute; left: 0; top: 0; width: 240px; height: 240px; border-radius: 20px; overflow: hidden; }
+.cover svg, .cover .tile { width: 240px; height: 240px; display: block; }
+.cover .stroke { position: absolute; inset: 0; border-radius: 20px; box-shadow: inset 0 0 0 2px rgba(255,255,255,.12); }
+.title { font-family: "InterSemi"; font-size: 40px; line-height: normal; left: 272px; max-width: 1040px; overflow: hidden;
+  text-overflow: ellipsis; }
+.second { font-family: "InterMedium"; font-size: 32px; line-height: normal; left: 272px; overflow: hidden; text-overflow: ellipsis;
+  display: flex; align-items: center; gap: 12px; }
+.second svg { width: 32px; height: 32px; flex: none; }
+.second span { overflow: hidden; text-overflow: ellipsis; }
+.guides { position: absolute; inset: 0; pointer-events: none; }
+.guides line { stroke: #0a84ff; stroke-width: 2; opacity: .7; }
+.guides text { fill: #0a84ff; font: 20px var(--ui); }
+aside { background: var(--panel); border-radius: 10px; padding: 14px; display: grid; gap: 14px; box-shadow: 0 0 0 1px var(--line); }
+fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 6px; min-width: 0; }
+legend { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.seg { display: flex; flex-wrap: wrap; gap: 4px; }
+button { font: 13px var(--ui); color: var(--fg); background: #24242b; border: 1px solid var(--line); border-radius: 999px;
+  padding: 6px 11px; cursor: pointer; }
+button[aria-pressed="true"] { background: var(--fg); color: #111216; border-color: var(--fg); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.act { background: transparent; border-color: #44444f; }
+.note { font-size: 12px; color: var(--muted); line-height: 1.45; margin: 0; }
+.compare { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 760px) { .compare { grid-template-columns: minmax(0, 1fr); } }
+.compare figure { margin: 0; display: grid; gap: 6px; min-width: 0; }
+.compare figcaption { font-size: 12px; color: var(--muted); }
+h2 { font-family: "InterSemi", var(--ui); font-size: 15px; margin: 6px 0 0; }
+@media (prefers-reduced-motion: reduce) { .glow { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>StandBy Screensaver</h1>
+    <p>Glass Home's screensaver as the TV will draw it: 1920×1080, the TV's own Inter files, the design brief's positions. Covers and songs are made up.</p>
+  </header>
+  <div class="main">
+    <div class="screen" id="screen"><div class="stage" id="stage"></div></div>
+    <aside>
+      <fieldset><legend>Time of day</legend><div class="seg" data-key="mode">
+        <button data-v="day">Day</button><button data-v="night">Night</button></div>
+        <button class="act" id="goNight">Go to 22:00 (3 s)</button></fieldset>
+      <fieldset><legend>Music</legend><div class="seg" data-key="music">
+        <button data-v="playing">Playing</button><button data-v="paused">Paused</button><button data-v="none">No music</button></div>
+        <div class="seg"><button class="act" id="next">Next song</button><button class="act" id="toggle">Start / stop music</button></div></fieldset>
+      <fieldset><legend>Playing on</legend><div class="seg" data-key="source">
+        <button data-v="tv">This TV</button><button data-v="phone">A phone</button></div></fieldset>
+      <fieldset><legend>Song</legend><div class="seg" data-key="art">
+        <button data-v="cover">With cover</button><button data-v="tile">No cover</button><button data-v="long">Long title</button></div></fieldset>
+      <fieldset><legend>Clock</legend><div class="seg" data-key="h24">
+        <button data-v="12">12-hour</button><button data-v="24">24-hour</button></div></fieldset>
+      <fieldset><legend>Preview</legend><div class="seg">
+        <button id="guides" aria-pressed="false">Guides</button>
+        <button id="reduce" aria-pressed="false">Reduce Motion</button>
+        <button id="fast" aria-pressed="false">Drift ×600</button></div>
+        <p class="note">The face drifts on a ±24 × ±16 px orbit, 1 px at most every 10 s. ×600 shows the path. The backlight (0.50 by day, its dimmest at night) can only be judged on the TV.</p></fieldset>
+    </aside>
+  </div>
+  <h2>Same family, not the alarm</h2>
+  <div class="compare">
+    <figure><div class="screen" id="cmp0"><div class="stage" id="cmpStage0"></div></div><figcaption>Screensaver, now</figcaption></figure>
+    <figure><div class="screen" id="cmp1"><div class="stage" id="cmpStage1"></div></div><figcaption>Alarm, start of the sunrise</figcaption></figure>
+    <figure><div class="screen" id="cmp2"><div class="stage" id="cmpStage2"></div></div><figcaption>Alarm, ringing</figcaption></figure>
+  </div>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="nightTint" color-interpolation-filters="sRGB"><feColorMatrix id="nightMatrix" type="matrix"
+    values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/></filter>
+</defs></svg>
+
+<script>
+const PHONE = "__PHONE__";
+const MUSIC = "__MUSIC__";
+const ALARM = "__ALARM__";
+const RED = "#B81C0C", DAY = "#E6E6EA";
+const TINT = [.1534,.5161,.0521,0,0, .0233,.0785,.0079,0,0, .0100,.0337,.0034,0,0, 0,0,0,1,0];
+const IDENT = [1,0,0,0,0, 0,1,0,0,0, 0,0,1,0,0, 0,0,0,1,0];
+// Made-up songs. glow = the cover's first CoverColours field.
+const SONGS = [
+  { title: "Half Light", artist: "The Lanterns", glow: "#E8742A", art: (id) => `<svg viewBox="0 0 240 240"><defs><linearGradient id="a${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b1b4f"/><stop offset=".6" stop-color="#b8325a"/><stop offset="1" stop-color="#f08a30"/></linearGradient></defs><rect width="240" height="240" fill="url(#a${id})"/><circle cx="120" cy="168" r="46" fill="#ffd27a"/><rect y="168" width="240" height="72" fill="#3a1236" opacity=".85"/></svg>` },
+  { title: "Paper Moon", artist: "Mara Quinn", glow: "#C9B9A0", art: (id) => `<svg viewBox="0 0 240 240"><rect width="240" height="240" fill="#f4f1ec"/><circle cx="150" cy="96" r="44" fill="none" stroke="#1d1d22" stroke-width="3"/><text x="24" y="214" font-family="InterSemi" font-size="22" fill="#1d1d22">PAPER MOON</text></svg>` },
+  { title: "Night Drive", artist: "Corridor", glow: "#2E5BFF", art: (id) => `<svg viewBox="0 0 240 240"><rect width="240" height="240" fill="#07070a"/><path d="M0 180 L240 120 L240 132 L0 192Z" fill="#2e5bff" opacity=".9"/><path d="M0 200 L240 150 L240 156 L0 206Z" fill="#ff4f7b" opacity=".8"/></svg>` },
+];
+const LONG = { title: "Everything You Said on the Last Night of Summer (Extended Version)",
+  artist: "Wren and the Cartographers featuring the Northfield Choir and Friends", glow: "#E8742A" };
+
+const state = { mode: "day", music: "playing", source: "tv", art: "cover", h24: "12", song: 0,
+  guides: false, reduce: false, fast: false, night: 0 /* 0 day … 1 night, animated */ };
+try { const s = JSON.parse(localStorage.getItem("standbyPreview") || "{}"); Object.assign(state, s, { night: s.mode === "night" ? 1 : 0 }); } catch (e) {}
+if (matchMedia("(prefers-reduced-motion: reduce)").matches) state.reduce = true;
+const save = () => { try { localStorage.setItem("standbyPreview", JSON.stringify({ mode: state.mode, music: state.music,
+  source: state.source, art: state.art, h24: state.h24, guides: state.guides, reduce: state.reduce })); } catch (e) {} };
+
+// Positions: the fonts' ascent is 0.96875 em, so a text box's top is baseline − 0.96875 × size.
+const topFor = (baseline, size) => baseline - 0.96875 * size;
+const mix = (a, b, t) => { const p = (h) => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const x = p(a), y = p(b); return "#" + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, "0")).join(""); };
+const alpha = (hex, a) => hex + Math.round(a * 255).toString(16).padStart(2, "0");
+
+function timeText(h24) {
+  const d = new Date(); const h = d.getHours(), m = String(d.getMinutes()).padStart(2, "0");
+  return h24 === "24" ? String(h).padStart(2, "0") + ":" + m : ((h % 12) || 12) + ":" + m;
+}
+function dateText() {
+  return new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }).toUpperCase();
+}
+function song() { return state.art === "long" ? { ...LONG, art: SONGS[0].art } : SONGS[state.song % SONGS.length]; }
+
+// ---- the screensaver face ----------------------------------------------------------------------------------------
+function buildSaver(stage, id) {
+  stage.innerHTML = `
+    <div class="glow" data-r="glowA"></div><div class="glow" data-r="glowB" style="opacity:0"></div>
+    <div class="face" data-r="face">
+      <div class="abs date" data-r="date" style="left:112px; top:${topFor(160, 40)}px"></div>
+      <div class="abs clock" data-r="clock"></div>
+      <div class="row" data-r="row">
+        <div class="cover" data-r="cover"></div>
+        <div class="abs title" data-r="title"></div>
+        <div class="abs second" data-r="second"></div>
+      </div>
+    </div>
+    <svg class="guides" data-r="guides" viewBox="0 0 1920 1080"></svg>`;
+  const r = {}; stage.querySelectorAll("[data-r]").forEach(e => r[e.dataset.r] = e); r.id = id; return r;
+}
+
+function paintSaver(r, opts = {}) {
+  const t = state.night, ink = mix(DAY, RED, t), dim = t >= 1 ? RED : alpha(mix(DAY, RED, t), 0.62 + 0.38 * t);
+  const music = opts.music ?? state.music, s = song();
+  r.date.textContent = dateText(); r.date.style.color = t > 0 ? ink : "rgba(255,255,255,.62)";
+  if (t > 0 && t < 1) r.date.style.color = mix("#9e9ea0", RED, t);
+  r.clock.textContent = timeText(state.h24); r.clock.style.color = ink;
+  const capTop = music === "none" ? 351 : 248, base = music === "none" ? 729 : 626;
+  r.clock.style.top = topFor(base, 520) + "px";
+  r.row.style.opacity = music === "none" ? 0 : 1;
+  // cover
+  const tinted = `filter:url(#nightTint)`;
+  if (state.art === "tile") {
+    r.cover.innerHTML = `<div class="tile" style="background:${t > 0.5 ? "rgba(184,28,12,.14)" : "rgba(255,255,255,.14)"};display:grid;place-items:center">
+      <svg viewBox="0 0 24 24" width="112" height="112"><path d="${MUSIC}" fill="${t > 0.5 ? RED : "rgba(255,255,255,.6)"}"/></svg></div>`;
+  } else {
+    r.cover.innerHTML = `<div style="${t > 0 ? tinted : ""}">${s.art(r.id + state.song)}</div>` + (t < 1 ? `<div class="stroke" style="opacity:${1 - t}"></div>` : "");
+  }
+  r.cover.style.opacity = music === "paused" ? 0.4 : 1;
+  // text
+  const hasTitle = true;
+  r.title.textContent = s.title; r.title.style.color = ink; r.title.style.top = (topFor(852, 40) - 744) + "px";
+  const second = music === "paused" ? "Paused" : s.artist;
+  const glyph = state.source === "phone" ? `<svg viewBox="0 -960 960 960"><path d="${PHONE}" fill="${t >= 1 ? RED : "rgba(255,255,255,.55)"}"/></svg>` : "";
+  r.second.innerHTML = glyph + `<span></span>`; r.second.querySelector("span").textContent = second;
+  r.second.style.color = dim; r.second.style.top = (topFor(900, 32) - 744) + "px";
+  r.second.style.maxWidth = "1040px";
+  // glow, by day only
+  const g = state.art === "tile" ? "#2E3A5C" : s.glow;
+  const bg = `radial-gradient(circle 900px at 232px 864px, ${alpha(g, .22)} 0, ${alpha(g, .08)} 450px, ${alpha(g, 0)} 900px)`;
+  r.glowA.style.background = bg; r.glowA.style.opacity = (1 - t) * (music === "none" ? 0 : 1);
+  // guides
+  r.guides.innerHTML = state.guides ? guideSvg(music) : "";
+}
+
+function guideSvg(music) {
+  const xs = [112, 384, 1424, 1808], ys = music === "none" ? [160, 351, 729] : [160, 248, 626, 744, 984];
+  return xs.map(x => `<line x1="${x}" y1="0" x2="${x}" y2="1080"/><text x="${x + 6}" y="1066">x ${x}</text>`).join("")
+    + ys.map(y => `<line x1="0" y1="${y}" x2="1920" y2="${y}"/><text x="8" y="${y - 6}">y ${y}</text>`).join("");
+}
+
+// ---- the alarm frames, from the alarm's keyframes ------------------------------------------------------------------
+const K = { sky: ["#000000", "#1A1012"], hor: ["#0A0100", "#6E3A1E"], sun: ["#3D0600", "#FFC780"], clock: ["#B81C0C", "#FFF3E4"] };
+function paintAlarm(stage, p) {
+  const i = p ? 1 : 0, sun = K.sun[i], ink = K.clock[i];
+  stage.innerHTML = `
+    <div style="position:absolute;inset:0;background:linear-gradient(${K.sky[i]}, ${K.hor[i]})"></div>
+    <div style="position:absolute;inset:0;background:radial-gradient(circle 1000px at 960px 1260px, ${sun} 0, ${alpha(sun, .45)} 500px, ${alpha(sun, 0)} 1000px)"></div>
+    <div class="abs date" style="left:112px;top:${topFor(160, 40)}px;color:${ink}">${dateText()}</div>
+    <div class="abs date" style="right:112px;top:${topFor(160, 40)}px;color:${ink};display:flex;align-items:center;gap:12px"><svg viewBox="0 -960 960 960" width="40" height="40"><path d="${ALARM}" fill="${ink}"/></svg>7:00 AM</div>
+    <div class="abs clock" style="font-size:600px;top:${topFor(704, 600)}px;color:${ink}">${timeText(state.h24)}</div>
+    ${p ? `<div class="abs" style="left:588px;top:836px;width:360px;height:96px;border-radius:48px;background:rgba(245,245,245,.96);color:#111216;font:34px InterSemi;display:grid;place-items:center">Snooze</div>
+    <div class="abs" style="left:972px;top:836px;width:360px;height:96px;border-radius:48px;background:rgba(0,0,0,.4);color:#fff;font:34px InterSemi;display:grid;place-items:center">Stop</div>` : ""}`;
+}
+
+// ---- wiring --------------------------------------------------------------------------------------------------------
+const main = buildSaver(document.getElementById("stage"), "m");
+const cmp = buildSaver(document.getElementById("cmpStage0"), "c");
+function render() {
+  paintSaver(main); paintSaver(cmp);
+  document.getElementById("nightMatrix").setAttribute("values", IDENT.map((v, k) => v + (TINT[k] - v) * state.night).join(" "));
+  paintAlarm(document.getElementById("cmpStage1"), 0); paintAlarm(document.getElementById("cmpStage2"), 1);
+  document.querySelectorAll(".seg[data-key]").forEach(seg => seg.querySelectorAll("button").forEach(b =>
+    b.setAttribute("aria-pressed", String(state[seg.dataset.key] === b.dataset.v))));
+  ["guides", "reduce", "fast"].forEach(k => document.getElementById(k).setAttribute("aria-pressed", String(state[k])));
+  save();
+}
+function fit() {
+  for (const [scr, stg] of [["screen", "stage"], ["cmp0", "cmpStage0"], ["cmp1", "cmpStage1"], ["cmp2", "cmpStage2"]]) {
+    const w = document.getElementById(scr).clientWidth; document.getElementById(stg).style.transform = `scale(${w / 1920})`;
+  }
+}
+new ResizeObserver(fit).observe(document.getElementById("screen")); addEventListener("resize", fit);
+
+document.querySelectorAll(".seg[data-key]").forEach(seg => seg.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  state[seg.dataset.key] = b.dataset.v;
+  if (seg.dataset.key === "mode") state.night = b.dataset.v === "night" ? 1 : 0;
+  render();
+}));
+["guides", "reduce", "fast"].forEach(k => document.getElementById(k).addEventListener("click", () => { state[k] = !state[k]; render(); }));
+
+// Day → night over 3 s (ease-in-out), as at 22:00.
+document.getElementById("goNight").addEventListener("click", () => {
+  state.mode = "day"; state.night = 0; render(); state.mode = "night";
+  const t0 = performance.now();
+  const step = (now) => { const x = Math.min(1, (now - t0) / 3000); state.night = x < .5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+    render(); if (x < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+});
+
+// A song change: hold for the cover, row out 300 ms, swap, in 500 ms.
+document.getElementById("next").addEventListener("click", () => {
+  if (state.music === "none") state.music = "playing";
+  const rows = [main.row, cmp.row];
+  setTimeout(() => {
+    rows.forEach(r => { r.style.transition = "opacity 300ms cubic-bezier(.4,0,1,1)"; r.style.opacity = 0; });
+    setTimeout(() => { state.song++; render(); rows.forEach(r => { r.style.opacity = 0; requestAnimationFrame(() => {
+      r.style.transition = "opacity 500ms cubic-bezier(0,0,.2,1)"; r.style.opacity = 1; }); }); }, 300);
+  }, 700);
+});
+
+// Music starts or ends: the clock slides 103 px over 800 ms (Reduce Motion: a crossfade).
+document.getElementById("toggle").addEventListener("click", () => {
+  const starting = state.music === "none";
+  for (const r of [main, cmp]) {
+    if (state.reduce) {
+      r.clock.style.transition = "opacity 200ms"; r.clock.style.opacity = 0;
+      setTimeout(() => { r.clock.style.transition = "opacity 300ms"; r.clock.style.opacity = 1; }, 220);
+    } else {
+      r.clock.style.transition = "top 800ms cubic-bezier(.2,.8,.2,1)";
+    }
+    r.row.style.transition = starting ? "opacity 500ms 300ms" : "opacity 400ms";
+  }
+  if (starting) { state.music = "playing"; render(); }
+  else { for (const r of [main, cmp]) r.row.style.opacity = 0; setTimeout(() => { state.music = "none"; render(); }, state.reduce ? 0 : 400); }
+});
+
+// Drift: whole pixels on a Lissajous orbit inside ±24 × ±16, every 10 s (×600: every frame).
+const phase = Math.random() * 6.283, t0 = performance.now();
+function drift(now) {
+  const t = (state.fast ? (now - t0) * 600 : (now - t0)) / 1000;
+  const x = Math.round(24 * Math.sin(2 * Math.PI * t / (37 * 60) + phase)), y = Math.round(16 * Math.sin(2 * Math.PI * t / (23 * 60) + 1.7 * phase));
+  for (const r of [main, cmp]) r.face.style.transform = `translate(${x}px, ${y}px)`;
+}
+setInterval(() => drift(performance.now()), 10000);
+(function fastLoop(now) { if (state.fast) drift(now); requestAnimationFrame(fastLoop); })(performance.now());
+setInterval(render, 15000);
+
+document.fonts.ready.then(() => { render(); fit(); drift(performance.now()); });
+render(); fit();
+</script>
