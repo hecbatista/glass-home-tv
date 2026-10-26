@@ -2,6 +2,10 @@
 """Minimal ADB-over-TCP client for an Android TV using adb_shell (no adb binary needed).
 
 Set TV_HOST to the TV's IP. Usage:
+    tv.py --target emu <any command below>
+                                       the Android TV emulator on this machine instead of the TV,
+                                       through the SDK's adb (launcher/emu-install.sh starts it);
+                                       EMU_PORT=5556 for a second emulator
     tv.py --probe                      connect and print model / Android version
     tv.py <shell command...>           run one shell command
     tv.py --screenshot <local.png> [KEY ...] [--wait SECONDS]
@@ -12,6 +16,8 @@ Set TV_HOST to the TV's IP. Usage:
 """
 import os
 import re
+import shutil
+import subprocess
 import sys
 import time
 
@@ -28,9 +34,14 @@ for _stream in (sys.stdout, sys.stderr):
     except (AttributeError, ValueError):
         pass
 
+# --target emu previews a change on the Android TV emulator before it goes to the TV. The emulator's
+# adb port belongs to the SDK's adb server, so commands go through that adb binary instead of adb_shell.
+TARGET_EMU = sys.argv[1:3] == ["--target", "emu"]
+if TARGET_EMU:
+    del sys.argv[1:3]
 HOST = os.environ.get("TV_HOST")
 PORT = int(os.environ.get("TV_PORT", "5555"))
-if not HOST:
+if not HOST and not TARGET_EMU:
     sys.exit("Set TV_HOST to your TV's IP address, e.g.  TV_HOST=192.168.1.50 tools/tv.py --probe\n"
              "(find it under Settings → Network, or look for the TV in `arp -a`)")
 KEYDIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "adbkey")
@@ -69,13 +80,41 @@ def get_signer():
     return PythonRSASigner(pub, priv)
 
 
+class EmulatorDevice:
+    """The calls this script makes on an AdbDeviceTcp, sent to the emulator with the SDK's adb."""
+
+    def __init__(self):
+        sdk = os.environ.get("ANDROID_HOME", "/opt/homebrew/share/android-commandlinetools")
+        adb = shutil.which("adb") or os.path.join(sdk, "platform-tools", "adb")
+        # EMU_PORT picks a second emulator (EMU_PORT=5556 launcher/emu-install.sh); the first is on 5554.
+        self.adb = [adb, "-s", "emulator-" + os.environ.get("EMU_PORT", "5554")]
+        if subprocess.run(self.adb + ["get-state"], capture_output=True).returncode != 0:
+            sys.exit(f"No emulator at {self.adb[2]}: start it with launcher/emu-install.sh")
+
+    def shell(self, command, read_timeout_s=120.0):
+        return subprocess.run(self.adb + ["shell", command], stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT, text=True, errors="replace",
+                              timeout=read_timeout_s).stdout
+
+    def push(self, local, remote, **_):
+        subprocess.run(self.adb + ["push", local, remote], capture_output=True, check=True)
+
+    def pull(self, remote, local, **_):
+        subprocess.run(self.adb + ["pull", remote, local], capture_output=True, check=True)
+
+    def close(self):
+        pass
+
+
 def connect(timeout=120):
+    if TARGET_EMU:
+        return EmulatorDevice()
     dev = AdbDeviceTcp(HOST, PORT, default_transport_timeout_s=float(timeout))
     dev.connect(rsa_keys=[get_signer()], transport_timeout_s=float(timeout), auth_timeout_s=timeout)
     return dev
 
 
-USAGE = """usage:
+USAGE = """usage: (any of these after --target emu runs on the emulator)
     tv.py --probe
     tv.py --screenshot <local.png> [KEY ...] [--wait SECONDS]
     tv.py --push <local> <remote>

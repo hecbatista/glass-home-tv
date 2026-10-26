@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only: the emulator preview's demo hooks (launcher/emu-install.sh). Never merged into a release APK. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- A pretend player for the Now Playing panel and lyrics; see DemoMedia. Only the shell may send it. -->
+        <receiver
+            android:name=".DemoMedia"
+            android:exported="true"
+            android:permission="android.permission.WRITE_SECURE_SETTINGS" />
+    </application>
+</manifest>
