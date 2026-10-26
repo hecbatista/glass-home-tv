@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/search-fields>
 > Section: Components › Navigation and search
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2026-06-08 (Updated terminology and refined guidance for search as a tab in iOS.)
 
 A search field lets people search a collection of content for specific terms they enter.
@@ -95,6 +95,12 @@ The placement and behavior of the search field in iPadOS and macOS is similar. I
 **In a search field in a dedicated area, consider immediately focusing the field when a person navigates to the area to help them search faster and locate the field more easily.** An exception to this is on iPad when only a virtual keyboard is available, in which case it’s better to leave the field unfocused to prevent the keyboard from unexpectedly covering the view.
 
 **Account for window resizing with the placement of the search field.** On iPad, the search field fluidly resizes with the app window like it does on Mac. However, for compact views on iPad, itʼs important to ensure that search is available where it’s most contextually useful. For example, Notes and Mail place search above the column for the content list when they resize down to a compact view.
+
+### TV (tvOS)
+
+A search screen is a specialized keyboard screen that helps people enter search text, displaying search results beneath the keyboard in a fully customizable view. For developer guidance, see [UISearchController](https://developer.apple.com/documentation/uikit/uisearchcontroller).
+
+**Provide suggestions to make searching easier.** People typically don’t want to do a lot of typing in tvOS. To improve the search experience, provide popular and context-specific search suggestions, including recent searches when available. For developer guidance, see [Using suggested searches with a search controller](https://developer.apple.com/documentation/uikit/using-suggested-searches-with-a-search-controller).
 
 ## Change log
 

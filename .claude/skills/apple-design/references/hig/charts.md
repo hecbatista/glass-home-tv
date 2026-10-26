@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/charts>
 > Section: Components › Content
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 
 Organize data in a chart to communicate information with clarity and visual appeal.
 

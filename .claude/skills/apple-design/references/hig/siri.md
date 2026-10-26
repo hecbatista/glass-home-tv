@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/siri>
 > Section: Technologies
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2026-06-08 (Revised for Siri AI.)
 
 People use Siri to help them with the things they need to find, know, or do every day.

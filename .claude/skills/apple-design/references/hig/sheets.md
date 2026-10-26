@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/sheets>
 > Section: Components › Presentation
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2026-03-24 (Updated guidance for button placement.)
 
 A sheet helps people perform a scoped task that’s closely related to their current context.
@@ -38,6 +38,8 @@ The placement of these buttons varies between platforms; see [Platform considera
 Avoid showing all three buttons — Cancel, Done, and Back — together.
 
 ## Platform considerations
+
+*No additional considerations for tvOS.*
 
 ### Mobile (iOS, iPadOS)
 

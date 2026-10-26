@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/text-fields>
 > Section: Components › Selection and input
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2023-06-05 (Updated guidance to reflect changes in watchOS 10.)
 
 A text field is a rectangular area in which people enter or edit small, specific pieces of text.
@@ -36,6 +36,8 @@ A text field is a rectangular area in which people enter or edit small, specific
 **Minimize text entry in your tvOS and watchOS apps.** Entering long passages of text or filling out numerous text fields is time-consuming on Apple TV and Apple Watch. Minimize text input and consider gathering information more efficiently, such as with buttons.
 
 ## Platform considerations
+
+*No additional considerations for tvOS or visionOS.*
 
 ### Mobile (iOS, iPadOS)
 

@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/page-controls>
 > Section: Components › Presentation
-> Platforms covered: iOS, iPadOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2023-06-21 (Updated to include guidance for visionOS.)
 
 A page control displays a row of indicator images, each of which represents a page in a flat list.
@@ -58,6 +58,10 @@ A page control can include a translucent, rounded-rectangle background appearanc
 For developer guidance, see [backgroundStyle](https://developer.apple.com/documentation/uikit/uipagecontrol/backgroundstyle-swift.property).
 
 **Avoid supporting the scrubber when you use the minimal background style.** The minimal style doesn’t provide visual feedback during scrubbing. If you want to let people scrub a list of pages in your app, use the automatic or prominent background styles.
+
+### TV (tvOS)
+
+**Use page controls on collections of full-screen pages.** A page control is designed to operate in a full-screen environment where multiple content-rich pages are peers in the page hierarchy. Inclusion of additional controls makes it difficult to maintain focus while moving between pages.
 
 ## Change log
 

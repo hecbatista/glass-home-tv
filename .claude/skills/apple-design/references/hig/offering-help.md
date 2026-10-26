@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/offering-help>
 > Section: Patterns
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2023-12-05 (Included visionOS in guidance for creating tooltips.)
 
 Although the most effective experiences are approachable and intuitive, you can provide contextual help when necessary.

@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/layout>
 > Section: Foundations
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2026-09-09 (Updated guidance to reflect current best practices.)
 
 A consistent layout that adapts across display sizes, orientations, and multitasking configurations helps people understand and enjoy your app or game on all their devices.
@@ -88,6 +88,104 @@ A *safe area* defines the area within a window that isn’t covered on the edge 
 **Avoid placing controls or critical information at the bottom of a window.** People often move windows so that the bottom edge is below the bottom of the screen.
 
 **Avoid displaying content behind the camera housing at the top edge of the window.** For developer guidance, see [NSPrefersDisplaySafeAreaCompatibilityMode](https://developer.apple.com/documentation/bundleresources/information-property-list/nsprefersdisplaysafeareacompatibilitymode).
+
+### TV (tvOS)
+
+**Adhere to the screen’s safe area.** Inset primary content 60 points from the top and bottom of the screen, and 80 points from the sides. Providing these margins ensures your content is visible regardless of TV compatibility settings or overscan cropping.
+
+**Include appropriate padding between focusable elements.** When you use UIKit and the focus APIs, an element gets bigger when it comes into focus. Consider how elements look when they’re focused, and make sure you don’t let them overlap important information. For developer guidance, see [About focus interactions for Apple TV](https://developer.apple.com/documentation/uikit/about-focus-interactions-for-apple-tv).
+
+#### Grids
+
+The following grid layouts provide an optimal viewing experience. Be sure to use appropriate spacing between unfocused rows and columns to prevent overlap when an item comes into focus.
+
+If you use the UIKit collection view flow element, the number of columns in a grid is automatically determined based on the width and spacing of your content. For developer guidance, see [UICollectionViewFlowLayout](https://developer.apple.com/documentation/uikit/uicollectionviewflowlayout).
+
+##### Two-column
+
+**Two-column grid**
+
+| Attribute | Value |
+| --- | --- |
+| Unfocused content width | 860 pt |
+| Horizontal spacing | 40 pt |
+| Minimum vertical spacing | 100 pt |
+
+##### Three-column
+
+**Three-column grid**
+
+| Attribute | Value |
+| --- | --- |
+| Unfocused content width | 560 pt |
+| Horizontal spacing | 40 pt |
+| Minimum vertical spacing | 100 pt |
+
+##### Four-column
+
+**Four-column grid**
+
+| Attribute | Value |
+| --- | --- |
+| Unfocused content width | 410 pt |
+| Horizontal spacing | 40 pt |
+| Minimum vertical spacing | 100 pt |
+
+##### Five-column
+
+**Five-column grid**
+
+| Attribute | Value |
+| --- | --- |
+| Unfocused content width | 320 pt |
+| Horizontal spacing | 40 pt |
+| Minimum vertical spacing | 100 pt |
+
+##### Six-column
+
+**Six-column grid**
+
+| Attribute | Value |
+| --- | --- |
+| Unfocused content width | 260 pt |
+| Horizontal spacing | 40 pt |
+| Minimum vertical spacing | 100 pt |
+
+##### Seven-column
+
+**Seven-column grid**
+
+| Attribute | Value |
+| --- | --- |
+| Unfocused content width | 217 pt |
+| Horizontal spacing | 40 pt |
+| Minimum vertical spacing | 100 pt |
+
+##### Eight-column
+
+**Eight-column grid**
+
+| Attribute | Value |
+| --- | --- |
+| Unfocused content width | 184 pt |
+| Horizontal spacing | 40 pt |
+| Minimum vertical spacing | 100 pt |
+
+##### Nine-column
+
+**Nine-column grid**
+
+| Attribute | Value |
+| --- | --- |
+| Unfocused content width | 160 pt |
+| Horizontal spacing | 40 pt |
+| Minimum vertical spacing | 100 pt |
+
+**Include additional vertical spacing for titled rows.** If a row has a title, provide enough spacing between the bottom of the previous unfocused row and the center of the title to avoid crowding. Also provide spacing between the bottom of the title and the top of the unfocused items in the row.
+
+**Use consistent spacing.** When content isn’t consistently spaced, it no longer looks like a grid and it’s harder for people to scan.
+
+**Make partially hidden content look symmetrical.** To help direct attention to the fully visible content, keep partially hidden offscreen content the same width on each side of the screen.
 
 ## Change log
 

@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/settings>
 > Section: Patterns
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2024-06-10 (Reorganized some guidance into new topics and added game-specific examples.)
 
 People expect apps and games to just work, but they also appreciate having ways to customize the experience to fit their needs.

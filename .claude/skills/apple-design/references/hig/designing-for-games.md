@@ -9,7 +9,7 @@ When people play your game on an Apple device, they dive into the world you desi
 
 ---
 
-As you create or adapt a game for Apple platforms, learn how to integrate the fundamental platform characteristics and patterns that help your game feel at home on all Apple devices. To learn what makes each platform unique, see [Designing for iOS](designing-for-ios.md), [Designing for iPadOS](designing-for-ipados.md), [Designing for macOS](designing-for-macos.md), Designing for tvOS, Designing for visionOS, and Designing for watchOS. For developer guidance, see [Games Pathway](https://developer.apple.com/games/pathway/).
+As you create or adapt a game for Apple platforms, learn how to integrate the fundamental platform characteristics and patterns that help your game feel at home on all Apple devices. To learn what makes each platform unique, see [Designing for iOS](designing-for-ios.md), [Designing for iPadOS](designing-for-ipados.md), [Designing for macOS](designing-for-macos.md), [Designing for tvOS](designing-for-tvos.md), Designing for visionOS, and Designing for watchOS. For developer guidance, see [Games Pathway](https://developer.apple.com/games/pathway/).
 
 ## Jump into gameplay
 
@@ -29,6 +29,7 @@ As you create or adapt a game for Apple platforms, learn how to integrate the fu
 | --- | --- | --- |
 | iOS, iPadOS | 17 pt | 11 pt |
 | macOS | 13 pt | 10 pt |
+| tvOS | 29 pt | 23 pt |
 
 **Make sure buttons are always easy to use.**  Buttons that are too small or too close together can frustrate players and make gameplay less fun. Each platform defines a recommended minimum button size based on its default interaction method. For example, buttons in iOS must be at least 44x44 pt to accommodate touch interaction. For guidance, see [Buttons](buttons.md).
 
@@ -36,6 +37,7 @@ As you create or adapt a game for Apple platforms, learn how to integrate the fu
 | --- | --- | --- |
 | iOS, iPadOS | 44x44 pt | 28x28 pt |
 | macOS | 28x28 pt | 20x20 pt |
+| tvOS | 66x66 pt | 56x56 pt |
 
 **Prefer resolution-independent textures and graphics.**  If creating resolution-independent assets isn’t possible, match the resolution of your game to the resolution of the device. In visionOS, prefer vector-based art that can continue to look good when the system dynamically scales it as people view it from different distances and angles. For guidance, see [Images](images.md).
 
@@ -54,6 +56,7 @@ As you create or adapt a game for Apple platforms, learn how to integrate the fu
 | iOS | Touch | Game controller |
 | iPadOS | Touch | Game controller, keyboard, mouse, trackpad, Apple Pencil |
 | macOS | Keyboard, mouse, trackpad | Game controller |
+| tvOS | Remote | Game controller, keyboard, mouse, trackpad |
 
 **Support physical game controllers, while also giving people alternatives.**  Every platform except watchOS supports physical game controllers. Although the presence of a game controller makes it straightforward to port controls from an existing game and handle complex control mappings, recognize that not every player can use a physical game controller. To make your game available to as many players as possible, also offer alternative ways to interact with your game. For guidance, see [Physical controllers](game-controls.md#physical-controllers).
 

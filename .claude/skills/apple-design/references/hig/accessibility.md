@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/accessibility>
 > Section: Foundations
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2025-06-09 (Added guidance and links for Assistive Access, Switch Control, and Accessibility Nutrition Labels.)
 
 Accessible user interfaces empower everyone to have a great experience with your app or game.
@@ -29,6 +29,7 @@ The people who use your interface may be blind, color blind, or have low vision 
 | --- | --- | --- |
 | iOS, iPadOS | 17 pt | 11 pt |
 | macOS | 13 pt | 10 pt |
+| tvOS | 29 pt | 23 pt |
 
 **Bear in mind that font weight can also impact how easy text is to read.** If you’re using a custom font with a thin weight, aim for larger than the recommended sizes to increase legibility. For more guidance, see [Typography](typography.md).
 
@@ -75,6 +76,7 @@ Ensure your interface offers a comfortable experience for people with limited de
 | --- | --- | --- |
 | iOS, iPadOS | 44x44 pt | 28x28 pt |
 | macOS | 28x28 pt | 20x20 pt |
+| tvOS | 66x66 pt | 56x56 pt |
 
 **Consider spacing between controls as important as size.** Include enough padding between elements to reduce the chance that someone taps the wrong control. In general, it works well to add about 12 points of padding around elements that include a bezel. For elements without a bezel, about 24 points of padding works well around the element’s visible edges.
 

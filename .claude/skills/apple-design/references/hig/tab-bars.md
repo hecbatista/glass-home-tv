@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/tab-bars>
 > Section: Components › Navigation and search
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS omitted)
 > Last change on Apple's site: 2026-06-08 (Updated terminology and art.)
 
 A tab bar lets people navigate between top-level sections of your app.
@@ -56,6 +56,29 @@ The system displays a tab bar near the top of the screen. You can choose to have
 **Prefer a tab bar for navigation.** A tab bar provides access to the sections of your app that people use most. If your app is more complex, you can provide the option to convert the tab bar to a sidebar so people can access a wider set of navigation options.
 
 **Let people customize the tab bar.** In apps with a lot of sections that people might want to access, it can be useful to let people select items that they use frequently and add them to the tab bar, or remove items that they use less frequently. For example, in the Music app, a person can choose a favorite playlist to display in the tab bar. If you let people select their own tabs, aim for a default list of five or fewer to preserve continuity between compact and regular view sizes. For developer guidance, see [TabViewCustomization](https://developer.apple.com/documentation/swiftui/tabviewcustomization) and [UITab.Placement](https://developer.apple.com/documentation/uikit/uitab/placement).
+
+### TV (tvOS)
+
+A tab bar is highly customizable. For example, you can:
+
+- Specify a tint, color, or image for the tab bar background
+- Choose a font for tab items, including a different font for the selected item
+- Specify tints for selected and unselected items
+- Add button icons, like settings and search
+
+By default, a tab bar is translucent, and only the selected tab is opaque. When people use the remote to focus on the tab bar, the selected tab includes a drop shadow that emphasizes its selected state. The height of a tab bar is 68 points, and its top edge is 46 points from the top of the screen; you can’t change either of these values.
+
+If there are more items than can fit in the tab bar, the system truncates the rightmost item by applying a fade effect that begins at the right side of the tab bar. If there are enough items to cause scrolling, the system also applies a truncating fade effect that starts from the left side.
+
+**Be aware of tab bar scrolling behaviors.** By default, people can scroll the tab bar offscreen when the current tab contains a single main view. You can see examples of this behavior in the Watch Now, Movies, TV Show, Sports, and Kids tabs in the TV app. The exception is when a screen contains a split view, such as the TV app’s Library tab or an app’s Settings screen. In this case, the tab bar remains pinned at the top of the view while people scroll the content within the primary and secondary panes of the split view. Regardless of a tab’s contents, focus always returns to the tab bar at the top of the page when people press Menu on the remote.
+
+**In a live-viewing app, organize tabs in a consistent way.** For the best experience, organize content in live-streaming apps with tabs in the following order:
+
+- Live content
+- Cloud DVR or other recorded content
+- Other content
+
+For additional guidance, see [Live-viewing apps](live-viewing-apps.md).
 
 ## Change log
 

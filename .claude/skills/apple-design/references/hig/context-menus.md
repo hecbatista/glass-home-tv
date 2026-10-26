@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/context-menus>
 > Section: Components › Menus and actions
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS omitted)
 > Last change on Apple's site: 2023-12-05 (Added guidance on hiding unavailable menu items.)
 
 A context menu provides access to functionality that’s directly related to an item, without cluttering the interface.
@@ -46,6 +46,8 @@ A context menu seldom displays a title. In contrast, each item in a context menu
 **Represent menu item actions with familiar icons.** Icons help people recognize common actions throughout your app. Use the same icons as the system to represent actions such as Copy, Share, and Delete, wherever they appear. For a list of icons that represent common actions, see [Standard icons](icons.md#standard-icons). For additional guidance, see [Menus](menus.md).
 
 ## Platform considerations
+
+*No additional considerations for tvOS. Not supported in watchOS.*
 
 ### Mobile (iOS, iPadOS)
 

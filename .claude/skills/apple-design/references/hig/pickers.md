@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/pickers>
 > Section: Components › Selection and input
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2023-06-05 (Updated guidance for using pickers in watchOS.)
 
 A picker displays one or more scrollable lists of distinct values that people can choose from.
@@ -54,6 +54,10 @@ Here are several examples of date pickers showing different combinations of styl
 **Choose a date picker style that suits your app.** There are two styles of date pickers in macOS: textual and graphical. The textual style is useful when you’re working with limited space and you expect people to make specific date and time selections. The graphical style is useful when you want to give people the option of browsing through days in a calendar or selecting a range of dates, or when the look of a clock face is appropriate for your app.
 
 For developer guidance, see [NSDatePicker](https://developer.apple.com/documentation/appkit/nsdatepicker).
+
+### TV (tvOS)
+
+Pickers are available in tvOS with SwiftUI. For developer guidance, see [Picker](https://developer.apple.com/documentation/swiftui/picker).
 
 ## Change log
 

@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/text-views>
 > Section: Components › Content
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2023-06-05 (Updated guidance to reflect changes in watchOS 10.)
 
 A text view displays multiline, styled text content, which can optionally be editable.
@@ -26,6 +26,10 @@ Text views can be any height and allow scrolling when the content extends outsid
 ### Mobile (iOS, iPadOS)
 
 **Show the appropriate keyboard type.** Several different keyboard types are available, each designed to facilitate a different type of input. To streamline data entry, the keyboard you display when editing a text view needs to be appropriate for the type of content. For guidance, see [Virtual keyboards](virtual-keyboards.md).
+
+### TV (tvOS)
+
+You can display text in tvOS using a text view. Because text input in tvOS is minimal by design, tvOS uses [text fields](text-fields.md) for editable text instead.
 
 ## Change log
 

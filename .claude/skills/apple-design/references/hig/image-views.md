@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/image-views>
 > Section: Components › Content
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2023-06-21 (Updated to include guidance for visionOS.)
 
 An image view displays a single image — or in some cases, an animated sequence of images — on a transparent or opaque background.
@@ -34,6 +34,10 @@ An image view can contain rich image data in various formats, like PNG, JPEG, an
 **If your app needs an editable image view, use an image well.** An [image well](image-wells.md) is an image view that supports copying, pasting, dragging, and using the Delete key to clear its content.
 
 **Use an image button instead of an image view to make a clickable image.** An [image button](buttons.md#image-buttons) contains an image or icon, appears in a view, and initiates an instantaneous app-specific action.
+
+### TV (tvOS)
+
+Many tvOS images combine multiple layers with transparency to create a feeling of depth. For guidance, see [Layered images](images.md#layered-images).
 
 ## Change log
 

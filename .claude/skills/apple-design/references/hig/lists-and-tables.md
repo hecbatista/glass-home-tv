@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/lists-and-tables>
 > Section: Components › Layout and organization
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2023-06-21 (Updated to include guidance for visionOS.)
 
 Lists and tables present data in one or more columns of rows.
@@ -52,6 +52,10 @@ Sometimes, people need to work with complex data in a multicolumn table or a spr
 **Consider using alternating row colors in a multicolumn table.** Alternating colors can help people track row values across columns, especially in a wide table.
 
 **Use an outline view instead of a table view to present hierarchical data.** An [outline view](outline-views.md) looks like a table view, but includes disclosure triangles for exposing nested levels of data. For example, an outline view might display folders and the items they contain.
+
+### TV (tvOS)
+
+**Confirm that images near a table still look good as each row highlights and slightly increases in size when it becomes focused.** A focused row’s corners can also become rounded, which may affect the appearance of images on either side of it. Account for this effect as you prepare images, and don’t add your own masks to round the corners.
 
 ## Change log
 

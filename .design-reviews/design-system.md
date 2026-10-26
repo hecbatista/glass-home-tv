@@ -104,5 +104,7 @@ code wins if they disagree; then fix this file. All positions are TV px on the 1
 ## Platform limits
 - No RenderEffect or real blur (API 30). No Palette dependency: cover colours come from `CoverColours`.
 - Fire OS keeps Amazon's launcher as the system Home; HDMI input switching needs a system-only permission.
-- No tvOS pages in the apple-design references: TV-specific placement is labelled judgment.
+- The apple-design references include tvOS (`designing-for-tvos.md`, `remotes.md`, `top-shelf.md`, `lockups.md` and
+  each page's `TV (tvOS)` section): cite them for TV calls. Fire OS specifics (no Siri Remote touch surface, Amazon's
+  Home) are still judgment.
 - Screenshots of Home show the Wi-Fi network's name: crop or blur them before sharing.

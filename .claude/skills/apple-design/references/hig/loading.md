@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/loading>
 > Section: Patterns
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2025-06-09 (Revised guidance for storing downloads to reflect downloading large assets in the background.)
 
 The best content-loading experience finishes before people become aware of it.

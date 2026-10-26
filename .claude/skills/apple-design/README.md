@@ -2,7 +2,7 @@
 
 An AI design reviewer grounded in Apple's Human Interface Guidelines, packaged as an agent skill.
 It audits and improves mobile and desktop UI, including layouts for the two-display iPhone Duo,
-against 123 HIG pages pulled straight from developer.apple.com, translates Apple's vocabulary for
+against 128 HIG pages, tvOS included, pulled straight from developer.apple.com, translates Apple's vocabulary for
 **Flutter**, **React Native**, **Tauri**, **Electron**, **SwiftUI**, **UIKit**, and **AppKit**, and
 adds a design-craft lens so the result feels at home on the platform without looking like a
 template.
@@ -142,7 +142,7 @@ apple-design-skill/
     ├── hig-lookup.md            # Generated routing table with Apple's summaries and change dates
     ├── cross-platform.md        # Apple's names in Flutter, React Native, Tauri, Electron terms
     ├── code-audit.md            # Code patterns for Apple Pay, Liquid Glass, and iPhone Duo
-    └── hig/                     # 123 generated pages + 1 curated guide
+    └── hig/                     # 128 generated pages + 1 curated guide
         ├── design-principles.md
         ├── designing-for-iphone-duo.md
         ├── accessibility.md
@@ -154,17 +154,17 @@ apple-design-skill/
 
 | Section | Files | Includes |
 | --- | --- | --- |
-| Getting started | 6 | Design principles; designing for iOS, iPadOS, macOS, iPhone Duo, and games |
+| Getting started | 7 | Design principles; designing for iOS, iPadOS, macOS, tvOS, iPhone Duo, and games |
 | Foundations | 16 | Accessibility, color, typography, layout, materials, dark mode, icons, SF Symbols, images, motion, branding, privacy, inclusion, right to left, writing, app icons |
 | Patterns | 24 | Onboarding, launching, loading, feedback, modality, searching, settings, notifications, accounts, data entry, undo, sharing, files, charts, audio, video, haptics, printing, multitasking, full screen, help, drag and drop, ratings, live viewing |
-| Components | 57 | Buttons, menus, the menu bar, toolbars, tab bars, sidebars, split views, sheets, alerts, action sheets, popovers, panels, windows, lists and tables, collections, text fields, pickers, toggles, sliders, steppers, segmented controls, search fields, progress indicators, gauges, labels, charts, widgets, notifications, Live Activities, controls, status bars, and more |
-| Inputs | 7 | Gestures, keyboards, pointing devices, focus and selection, game controls, Apple Pencil, gyroscope and accelerometer |
+| Components | 60 | Buttons, menus, the menu bar, toolbars, tab bars, sidebars, split views, sheets, alerts, action sheets, popovers, panels, windows, lists and tables, collections, text fields, pickers, toggles, sliders, steppers, segmented controls, search fields, progress indicators, gauges, labels, charts, widgets, notifications, Live Activities, controls, status bars, tvOS lockups, digit entry views and Top Shelf, and more |
+| Inputs | 8 | Gestures, keyboards, pointing devices, focus and selection, remotes, game controls, Apple Pencil, gyroscope and accelerometer |
 | Technologies | 13 | Apple Pay, Apple In-App Purchase, Sign in with Apple, Siri, Maps, augmented reality, machine learning, generative AI, iCloud, AirPlay, NFC, App Clips, VoiceOver |
 | Curated | 1 | Liquid Glass |
 
 Each generated page keeps Apple's wording, headings, tables, notes, and change log, links to its
-source, relabels platform headings by device class (phone, tablet, mobile, desktop), and omits
-the sections that apply only to tvOS, visionOS, or watchOS. The 35 pages Apple publishes for other platforms or Apple-only
+source, relabels platform headings by device class (phone, tablet, mobile, desktop, TV), and omits
+the sections that apply only to visionOS or watchOS. The 30 pages Apple publishes for other platforms or Apple-only
 services are listed, with the reason, at the end of `references/hig-lookup.md`.
 
 ## Keeping the references current

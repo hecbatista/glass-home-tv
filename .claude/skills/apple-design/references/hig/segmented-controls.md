@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/segmented-controls>
 > Section: Components › Selection and input
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS omitted)
 > Last change on Apple's site: 2023-06-21 (Updated to include guidance for visionOS.)
 
 A segmented control is a linear set of two or more segments, each of which functions as a button.
@@ -50,6 +50,12 @@ In addition to representing the state of a single or multiple-choice selection, 
 **Use a tab view in the main window area — instead of a segmented control — for view switching.** A [tab view](tab-views.md) supports efficient view switching and is similar in appearance to a [box](boxes.md) combined with a segmented control. Consider using a segmented control to help people switch views in a toolbar or inspector pane.
 
 **Consider supporting spring loading.** On a Mac equipped with a Magic Trackpad, spring loading lets people activate a segment by dragging selected items over it and force clicking without dropping the selected items. People can also continue dragging the items after a segment activates.
+
+### TV (tvOS)
+
+**Consider using a split view instead of a segmented control on screens that perform content filtering.** People generally find it easy to navigate back and forth between content and filtering options using a split view. Depending on its placement, a segmented control may not be as easy to access.
+
+**Avoid putting other focusable elements close to segmented controls.** Segments become selected when focus moves to them, not when people click them. Carefully consider where you position a segmented control relative to other interface elements. If other focusable elements are too close, people might accidentally focus on them when attempting to switch between segments.
 
 ## Change log
 

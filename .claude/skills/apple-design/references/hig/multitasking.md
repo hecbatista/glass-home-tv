@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/multitasking>
 > Section: Patterns
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS omitted)
 > Last change on Apple's site: 2025-06-09 (Reorganized guidance in platform considerations, and added guidance for multitasking with multiple windows in iPadOS.)
 
 Multitasking lets people switch quickly from one app to another, performing tasks in each.
@@ -55,6 +55,10 @@ To help your app respond correctly when people open it while windowed, make sure
 ### Desktop (macOS)
 
 On Mac, multitasking is the default experience because people typically run more than one app at a time, switching between windows and tasks as they work. When multiple app windows are open, macOS applies drop shadows that make the windows appear layered on the desktop, and applies other visual effects to help people distinguish different window states; for guidance, see [macOS window states](windows.md#macos-window-states).
+
+### TV (tvOS)
+
+On Apple TV, people can play or browse content while also playing movies or TV shows in Picture in Picture (where supported).
 
 ## Change log
 

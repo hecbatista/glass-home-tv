@@ -50,8 +50,8 @@ codebase, so don't use it just because a feature is visual.
    limits (OS version, missing APIs, licensed fonts, size budgets); the user's standing rules (for example "never
    commit or push without asking", "no screenshots showing the Wi-Fi name").
 5. **Check `apple-design` exists** (`.claude/skills/apple-design/` in the project, or `~/.claude/skills/apple-design/`). If not, tell the user and stop: without it this is just a
-   second opinion. Its references have no tvOS pages; for a TV project, say so in the brief, and the design agent
-   labels TV-specific calls as judgment, anchored to the design system.
+   second opinion. Its references include tvOS (`designing-for-tvos.md`, `remotes.md`, `TV (tvOS)` sections); for a TV project, point the design agent at
+   them in the brief, and it labels as judgment only the TV calls tvOS doesn't cover, anchored to the design system.
 6. **Start the decision log** at `<project>/.design-reviews/<feature-slug>.md` from `references/decision-log.md`.
    It is the single copy of the brief and every verdict. If `.design-reviews/` isn't git-ignored, leave it out of
    commits and say so at the end.

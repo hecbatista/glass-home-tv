@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/notifications>
 > Section: Components › System experiences
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2023-10-24 (Updated watchOS platform considerations with guidance for presenting notification responses to double tap.)
 
 A notification gives people timely, high-value information they can understand at a glance.

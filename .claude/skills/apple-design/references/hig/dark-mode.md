@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/dark-mode>
 > Section: Foundations
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS
 > Last change on Apple's site: 2024-08-06 (Added art contrasting the light and dark appearances.)
 
 Dark Mode is a systemwide appearance setting that uses a dark color palette to provide a comfortable viewing experience tailored for low-light environments.
@@ -50,6 +50,8 @@ The system uses vibrancy and increased contrast to maintain the legibility of te
 **Use system views to draw text fields and text views.** System views and controls make your app’s text look good on all backgrounds, adjusting automatically for the presence or absence of vibrancy. When possible, use a system-provided view to display text instead of drawing the text yourself.
 
 ## Platform considerations
+
+*No additional considerations for tvOS. Dark Mode isn’t supported in visionOS or watchOS.*
 
 ### Mobile (iOS, iPadOS)
 

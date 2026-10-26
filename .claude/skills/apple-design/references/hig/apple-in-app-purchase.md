@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/apple-in-app-purchase>
 > Section: Technologies
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2026-09-17 (Rebranded as Apple In-App Purchase and refined guidance to reflect current best practices.)
 
 People can use Apple In-App Purchase to pay for digital goods and services, like premium content and subscriptions, securely within your app.

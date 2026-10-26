@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/labels>
 > Section: Components › Layout and organization
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2023-06-05 (Updated guidance to reflect changes in watchOS 10.)
 
 A label is a static piece of text that people can read and often copy, but not edit.

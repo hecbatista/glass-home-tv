@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/sidebars>
 > Section: Components › Navigation and search
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS omitted)
 > Last change on Apple's site: 2026-06-08 (Updated guidance for sidebar icon colors, and clarified guidance for the adaptable sidebar style.)
 
 A sidebar appears on the leading side of a view and lets people navigate between areas of your app or top-level collections of content, like folders and playlists.
@@ -30,6 +30,8 @@ A sidebar requires a large amount of vertical and horizontal space. When space i
 **Make sure any sidebar icon colors you choose serve a clear purpose.** By default, sidebar icons use your app’s [accent color](color.md#app-accent-colors). In macOS, people can change the system accent color, which applies to all apps. When they do this, they expect all sidebar icons to appear in that color, so make sure your sidebar icons display the color people choose. However, if you use them sparingly, fixed colors can help clarify the meaning of an icon or draw attention to it. For example, the VIP icon in Mail uses a yellow color to set it apart from other sidebar icons, providing a visual cue about its importance.
 
 ## Platform considerations
+
+*No additional considerations for tvOS. Not supported in watchOS.*
 
 ### Mobile (iOS, iPadOS)
 

@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/action-sheets>
 > Section: Components › Presentation
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to watchOS omitted)
 
 An action sheet is a modal view that presents choices related to an action people initiate.
 

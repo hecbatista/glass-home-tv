@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/inclusion>
 > Section: Foundations
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 
 Inclusive apps and games put people first by prioritizing respectful communication and presenting content and functionality in ways that everyone can access and understand.
 
@@ -53,7 +53,7 @@ Using plain, inclusive language welcomes everyone and helps them understand your
 
 An approachable app or game doesn’t require people to have particular skills or knowledge before they can use it, and it gives people a clear path toward deepening their understanding over time. Here are two ways to help make an experience approachable.
 
-- Present a clear, straightforward interface. To help you design a simple interface that fits in with other experiences on each platform, see [Designing for iOS](designing-for-ios.md), [Designing for iPadOS](designing-for-ipados.md), [Designing for macOS](designing-for-macos.md),  Designing for tvOS, Designing for visionOS, Designing for watchOS, and [Designing for games](designing-for-games.md).
+- Present a clear, straightforward interface. To help you design a simple interface that fits in with other experiences on each platform, see [Designing for iOS](designing-for-ios.md), [Designing for iPadOS](designing-for-ipados.md), [Designing for macOS](designing-for-macos.md),  [Designing for tvOS](designing-for-tvos.md), Designing for visionOS, Designing for watchOS, and [Designing for games](designing-for-games.md).
 - Build in ways to learn how to use your app or game. Consider designing an onboarding flow that helps people who are new to your experience take a step-by-step approach while letting others skip straight to the content they want. For guidance, see [Onboarding](onboarding.md).
 
 ## Gender identity

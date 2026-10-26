@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/gestures>
 > Section: Inputs
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2024-09-09 (Added guidance for working with system overlays in visionOS and made organizational updates.)
 
 A gesture is a physical motion that a person uses to directly affect an object in an app or game on their device.
@@ -57,6 +57,10 @@ In addition to the [standard gestures](#standard-gestures) supported in all plat
 
 People primarily interact with macOS using a [keyboard](keyboards.md) and mouse. In addition, they can make [standard gestures](#standard-gestures) on a Magic Trackpad, Magic Mouse, or a [game controller](game-controls.md) that includes a touch surface.
 
+### TV (tvOS)
+
+People expect to use [standard gestures](#standard-gestures) to navigate tvOS apps and games with a compatible remote, Siri Remote, or [game controller](game-controls.md) that includes a touch surface. For guidance, see [Remotes](remotes.md).
+
 ## Specifications
 
 ### Standard gestures
@@ -73,7 +77,7 @@ The system provides APIs that support the familiar gestures people use with thei
 | Zoom | iOS, iPadOS, macOS, tvOS, visionOS | Zoom a view; magnify content. |
 | Rotate | iOS, iPadOS, macOS, tvOS, visionOS | Rotate a selected item. |
 
-For guidance on supporting additional gestures and button presses on specific input devices, see [Pointing devices](pointing-devices.md), Remotes, and [Game controls](game-controls.md).
+For guidance on supporting additional gestures and button presses on specific input devices, see [Pointing devices](pointing-devices.md), [Remotes](remotes.md), and [Game controls](game-controls.md).
 
 ## Change log
 

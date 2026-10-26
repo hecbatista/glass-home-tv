@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/toolbars>
 > Section: Components › Menus and actions
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2025-12-16 (Updated guidance for Liquid Glass.)
 
 A toolbar provides convenient access to frequently used commands, controls, navigation, and search.
@@ -84,6 +84,8 @@ To position items in the groupings you want, pin them to the leading edge, cente
 **Keep actions with text labels separate.** Placing an action with a text label next to an action with a symbol can create the illusion of a single action with a combined text and symbol, leading to confusion and misinterpretation. If your toolbar includes multiple text-labeled buttons, the text of those buttons may appear to run together, making the buttons indistinguishable. Add separation by inserting fixed space between the buttons. For developer guidance, see [UIBarButtonItem.SystemItem.fixedSpace](https://developer.apple.com/documentation/uikit/uibarbuttonitem/systemitem/fixedspace).
 
 ## Platform considerations
+
+*No additional considerations for tvOS.*
 
 ### Phone (iOS)
 

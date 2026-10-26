@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/launching>
 > Section: Patterns
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2024-06-10 (Added guidance on displaying a splash screen.)
 
 A streamlined launch experience helps people start using your app or game immediately.
@@ -40,6 +40,12 @@ Launching begins when someone opens your app or game, includes an initial downlo
 ### Mobile (iOS, iPadOS)
 
 **Launch in the appropriate orientation.** If your app or game supports both portrait and landscape modes, launch using the device’s current orientation. If your interface only runs in one orientation, launch in that orientation and let people rotate the device if necessary. Ensure a landscape-only interface responds correctly, regardless of whether people enter landscape orientation by rotating the device left or right. For guidance, see [Layout](layout.md).
+
+### TV (tvOS)
+
+> **Note:** Unlike the [layered images](images.md#layered-images) throughout much of a tvOS app, the launch screen is static.
+
+**In a live-viewing app, consider automatically starting playback soon after people start the app.** People come to your app to watch TV, so you might want to start playing new or recently viewed live content after a few seconds of inactivity. For guidance, see [Live-viewing apps](live-viewing-apps.md).
 
 ## Change log
 

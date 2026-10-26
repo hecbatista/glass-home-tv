@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/toggles>
 > Section: Components › Selection and input
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2024-03-29 (Enhanced guidance for using switches in macOS apps, clarified when a checkbox has a title, and added artwork for radio buttons.)
 
 A toggle lets people choose between a pair of opposing states, like on and off, using a different appearance to indicate each state.
@@ -22,6 +22,8 @@ In addition to toggles, all platforms also support buttons that behave like togg
 **Make sure the visual differences in a toggle’s state are obvious.** For example, you might add or remove a color fill, show or hide the background shape, or change the inner details you display — like a checkmark or dot — to show that a toggle is on or off. Avoid relying solely on different colors to communicate state, because not everyone can perceive the differences.
 
 ## Platform considerations
+
+*No additional considerations for tvOS, visionOS, or watchOS.*
 
 ### Mobile (iOS, iPadOS)
 

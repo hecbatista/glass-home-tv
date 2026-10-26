@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/managing-accounts>
 > Section: Patterns
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 
 When it doesn’t create an unnecessary barrier to your experience, an account can be a convenient way for people to access their content and track personal details.
 
@@ -62,6 +62,16 @@ Many popular TV providers let people sign in to their accounts at the system lev
 ## Platform considerations
 
 *No additional considerations for iOS, iPadOS, macOS, or visionOS.*
+
+### TV (tvOS)
+
+Most people interact with Apple TV using a remote, not a keyboard, so ask for the minimum amount of information necessary.
+
+**Prefer letting people use another device to sign up or authenticate.** When you configure your app’s associated domains, Apple TV can work with other devices to safely suggest sign-in credentials, including [Sign in with Apple](sign-in-with-apple.md). For developer guidance, see [Configuring an associated domain](https://developer.apple.com/documentation/xcode/configuring-an-associated-domain).
+
+**When people are signed in to a shared account, avoid asking them to choose their profile every time they become the current user.** In tvOS 16 and later, your app can share its credentials with all users while storing each individual’s profile and user data separately. When you support this type of sharing, your app can automatically use the current user’s profile without asking each person to sign in separately to a shared account. For developer guidance, see [kSecUseUserIndependentKeychain](https://developer.apple.com/documentation/security/ksecuseuserindependentkeychain) and [User Management Entitlement](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.user-management).
+
+**Minimize data entry.** If you need to gather more than a small amount of information, ask people to visit a website from another device. If you need an email address, show the email keyboard screen, which includes a list of recently entered addresses.
 
 ## Related guidelines
 

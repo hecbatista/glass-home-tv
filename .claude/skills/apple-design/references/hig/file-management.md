@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/file-management>
 > Section: Patterns
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2024-06-10 (Added guidelines for using the document launcher in iOS and iPadOS.)
 
 Some apps can support documents and files that people expect to manage throughout the system.
@@ -34,6 +34,8 @@ Quick Look helps you create previews of the files your app handles so that peopl
 **Consider implementing a Quick Look generator if your app produces custom file types.** A Quick Look generator lets other apps — including the Finder, Files, and Spotlight — display previews of your documents, making it easier for people to find them.
 
 ## Platform considerations
+
+*No additional considerations for tvOS, visionOS, or watchOS.*
 
 ### Mobile (iOS, iPadOS)
 

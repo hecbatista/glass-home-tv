@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/app-icons>
 > Section: Foundations
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2026-06-08 (Refined guidance for Liquid Glass.)
 
 A unique, memorable icon expresses your app’s or game’s purpose and personality and helps people recognize it at a glance.
@@ -36,6 +36,8 @@ For tvOS and visionOS app icons, you add your icon layers directly to an image s
 ## Icon shape
 
 An app icon’s shape varies based on a platform’s visual language. In iOS, iPadOS, and macOS, icons are square, and the system applies masking to produce rounded corners that precisely match the curvature of other rounded interface elements throughout the system and the bezel of the physical device itself. In tvOS, icons are rectangular, also with concentric edges. In visionOS and watchOS, icons are square and the system applies circular masking.
+
+*Illustrated: iOS, iPadOS, macOS, tvOS.*
 
 **Produce appropriately shaped, unmasked layers.** The system masks all layer edges to produce an icon’s final shape. For iOS, iPadOS, and macOS icons, provide square layers so the system can apply rounded corners. For visionOS and watchOS, provide square layers so the system can create the circular icon shape. For tvOS, provide rectangular layers so the system can apply rounded corners. Providing layers with pre-defined masking negatively impacts specular highlight effects and makes edges look jagged.
 
@@ -79,6 +81,10 @@ In iOS, iPadOS, and macOS, people can choose whether their Home Screen app icons
 
 *No additional considerations for iOS, iPadOS, or macOS.*
 
+### TV (tvOS)
+
+**Include a safe zone to ensure the system doesn’t crop your content.** When someone focuses your app icon, the system may crop content around the edges as the icon scales and moves. To ensure that your icon’s content is always visible, keep a safe zone around it. Be aware that the safe zone can vary, depending on the image size, layer depth, and motion, and the system crops foreground layers more than background layers.
+
 ## Specifications
 
 The layout, size, style, and appearances of app icons vary by platform.
@@ -86,6 +92,7 @@ The layout, size, style, and appearances of app icons vary by platform.
 | Platform | Layout shape | Icon shape after system masking | Layout size | Style | Appearances |
 | --- | --- | --- | --- | --- | --- |
 | iOS, iPadOS, macOS | Square | Rounded rectangle (square) | 1024x1024 px | Layered | Default, dark, clear light, clear dark, tinted light, tinted dark |
+| tvOS | Rectangle (landscape) | Rounded rectangle (rectangular) | 800x480 px | Layered (Parallax) | N/A |
 
 The system automatically scales your icon to produce smaller variants that appear in certain locations, such as Settings and notifications.
 

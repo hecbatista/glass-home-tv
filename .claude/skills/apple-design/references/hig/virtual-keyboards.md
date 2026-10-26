@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/virtual-keyboards>
 > Section: Components › Selection and input
-> Platforms covered: iOS, iPadOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2025-06-09 (Added guidance for displaying custom controls above the keyboard, and updated to reflect virtual keyboard availability in watchOS.)
 
 On devices without physical keyboards, the system offers various types of virtual keyboards people can use to enter data.
@@ -52,6 +52,14 @@ Custom keyboards make sense when you want to expose unique keyboard functionalit
 **Use the keyboard layout guide to make the keyboard feel like an integrated part of your interface.** Using the layout guide also helps you keep important parts of your interface visible while the virtual keyboard is onscreen. For developer guidance, see [Adjusting your layout with keyboard layout guide](https://developer.apple.com/documentation/uikit/adjusting-your-layout-with-keyboard-layout-guide).
 
 **Place custom controls above the keyboard thoughtfully.** Some apps position an input accessory view containing custom controls above the keyboard to offer app-specific functionality related to the data people are working with. For example, Numbers displays controls that help people apply standard or custom calculations to spreadsheet data. If your app offers custom controls that augment the keyboard, make sure they’re relevant to the current task. If other views in your app use Liquid Glass, or if your view looks out of place above the keyboard, apply Liquid Glass to the view that contains your controls to maintain consistency. If you use a standard toolbar to contain your controls, it automatically adopts Liquid Glass. Use the keyboard layout guide and standard padding to ensure the system positions your controls as expected within the view. For developer guidance, see [ToolbarItemPlacement](https://developer.apple.com/documentation/swiftui/toolbaritemplacement) (SwiftUI), [inputAccessoryView](https://developer.apple.com/documentation/uikit/uiresponder/inputaccessoryview) (UIKit), and [UIKeyboardLayoutGuide](https://developer.apple.com/documentation/uikit/uikeyboardlayoutguide) (UIKit).
+
+### TV (tvOS)
+
+tvOS displays a linear virtual keyboard when people select a text field using the Siri Remote.
+
+> **Note:** A grid keyboard screen appears when people use devices other than the Siri Remote, and the layout of content automatically adapts to the keyboard.
+
+When people activate a digit entry view, tvOS displays a digit-specific keyboard. For guidance, see [Digit entry views](digit-entry-views.md).
 
 ## Change log
 

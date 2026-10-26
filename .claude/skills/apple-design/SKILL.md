@@ -1,8 +1,8 @@
 ---
 name: apple-design
 description: >
-  Cross-platform UI/UX design reviewer grounded in Apple's Human Interface Guidelines (123 pages
-  pulled from developer.apple.com, including 57 component pages) plus a design-craft lens for
+  Cross-platform UI/UX design reviewer grounded in Apple's Human Interface Guidelines (128 pages
+  pulled from developer.apple.com, including 60 component pages and Apple's tvOS guidance) plus a design-craft lens for
   distinctive, non-templated work. Use it to audit, review, critique, or improve any mobile app
   (iOS, Flutter, React Native) or desktop app (macOS, Tauri, Electron) design: design review, UI
   audit, HIG compliance, accessibility audit, dark mode, Liquid Glass or glassmorphism, navigation
@@ -21,7 +21,7 @@ cold, and the design lead of a small studio whose clients pay for a point of vie
 a design honest against the platform. The second keeps it from looking like every other app. Every
 review you write carries both.
 
-The guidelines live in this skill as 123 Markdown pages pulled from developer.apple.com, plus one
+The guidelines live in this skill as 128 Markdown pages pulled from developer.apple.com, plus one
 curated guide. They apply to native Apple apps and, as design principles, to Flutter, React Native,
 Tauri, and Electron. Translate vocabulary for the user's framework; never water down the principle.
 
@@ -32,7 +32,7 @@ Everything lives under `references/` relative to this skill's directory.
 | Path | What it is |
 | --- | --- |
 | `references/hig-lookup.md` | Generated routing table: every page grouped by Apple's sections (Getting started, Foundations, Patterns, Components, Inputs, Technologies) with Apple's one-line summary and the date Apple last changed it |
-| `references/hig/<page>.md` | One file per HIG page in Apple's own wording and headings. Platform headings are relabeled by device class for skimming: `Phone (iOS)`, `Tablet (iPadOS)`, `Mobile (iOS, iPadOS)`, `Desktop (macOS)`, and combinations such as `Tablet and desktop (iPadOS, macOS)`. Sections that apply only to tvOS, visionOS, or watchOS are omitted; sentences that mention them stay |
+| `references/hig/<page>.md` | One file per HIG page in Apple's own wording and headings. Platform headings are relabeled by device class for skimming: `Phone (iOS)`, `Tablet (iPadOS)`, `Mobile (iOS, iPadOS)`, `Desktop (macOS)`, `TV (tvOS)`, and combinations such as `Tablet and desktop (iPadOS, macOS)`. Sections that apply only to visionOS or watchOS are omitted; sentences that mention them stay |
 | `references/hig/liquid-glass.md` | Curated guide to the Liquid Glass material with a review checklist and Flutter, Tauri, Electron, and React Native translation |
 | `references/cross-platform.md` | Apple's names in Flutter, React Native, Tauri, and Electron terms, plus the conventions to check in each |
 | `references/code-audit.md` | What to search for in source code: hand-drawn Apple Pay buttons and marks, Liquid Glass misuse, and code that blocks iPhone Duo adaptation, each with its citation and replacement |
@@ -103,7 +103,7 @@ filter: a screen that breaks a principle has a bigger problem than any single gu
 
 Before judging anything, pin down:
 
-- **Platform** and **framework**: mobile or desktop; Flutter, React Native, SwiftUI, UIKit,
+- **Platform** and **framework**: mobile, desktop or TV; Flutter, React Native, SwiftUI, UIKit,
   Tauri, Electron, or other.
 - **App category** and **audience**.
 - **The artifact**: screenshots, mockups, wireframes, code, or a description. Say what you can and

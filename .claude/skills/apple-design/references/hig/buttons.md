@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/buttons>
 > Section: Components › Menus and actions
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2025-12-16 (Updated guidance for Liquid Glass.)
 
 A button initiates an instantaneous action.
@@ -61,6 +61,8 @@ A button’s role can have additional effects on its appearance. For example, a 
 **Don’t assign the primary role to a button that performs a destructive action, even if that action is the most likely choice.** Because of its visual prominence, people sometimes choose a primary button without reading it first. Help people avoid losing content by assigning the primary role to nondestructive buttons.
 
 ## Platform considerations
+
+*No additional considerations for tvOS.*
 
 ### Mobile (iOS, iPadOS)
 

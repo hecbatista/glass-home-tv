@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/materials>
 > Section: Foundations
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2025-09-09 (Updated guidance for Liquid Glass.)
 
 A material is a visual effect that creates a sense of depth, layering, and hierarchy between foreground and background elements.
@@ -79,6 +79,19 @@ macOS provides several standard materials with designated purposes, and vibrant 
 **Choose when to allow vibrancy in custom views and controls.** Depending on configuration and system settings, system views and controls use vibrancy to make foreground content stand out against any background. Test your interface in a variety of contexts to discover when vibrancy enhances the appearance and improves communication.
 
 **Choose a background blending mode that complements your interface design.** macOS defines two modes that blend background content: behind window and within window. For developer guidance, see [NSVisualEffectView.BlendingMode](https://developer.apple.com/documentation/appkit/nsvisualeffectview/blendingmode-swift.enum).
+
+### TV (tvOS)
+
+In tvOS, Liquid Glass appears throughout navigation elements and system experiences such as Top Shelf and Control Center. Certain interface elements, like image views and buttons, adopt Liquid Glass when they gain focus.
+
+In addition to Liquid Glass, tvOS continues to provide standard materials, which you can use to help define structure in the content layer. The thickness of a standard material affects how prominently the underlying content shows through. For example, consider using standard materials in the following ways:
+
+| Material | Recommended for |
+| --- | --- |
+| [ultraThin](https://developer.apple.com/documentation/swiftui/material/ultrathin) | Full-screen views that require a light color scheme |
+| [thin](https://developer.apple.com/documentation/swiftui/material/thin) | Overlay views that partially obscure onscreen content and require a light color scheme |
+| [regular](https://developer.apple.com/documentation/swiftui/material/regular) | Overlay views that partially obscure onscreen content |
+| [thick](https://developer.apple.com/documentation/swiftui/material/thick) | Overlay views that partially obscure onscreen content and require a dark color scheme |
 
 ## Change log
 

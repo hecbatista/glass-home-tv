@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/alerts>
 > Section: Components › Presentation
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2024-02-02 (Enhanced guidance for using default and Cancel buttons.)
 
 An alert gives people critical information they need right away.
@@ -25,7 +25,7 @@ For example, an alert can tell people about a problem, warn them when their acti
 
 An alert is a modal view that can look different in different platforms and devices.
 
-*Illustrated: iOS, macOS.*
+*Illustrated: iOS, macOS, tvOS.*
 
 ## Content
 
@@ -66,6 +66,8 @@ In all platforms, alerts display a title, optional informative text, and up to t
 | Pressing Menu on the remote | tvOS |
 
 ## Platform considerations
+
+*No additional considerations for tvOS or watchOS.*
 
 ### Mobile (iOS, iPadOS)
 

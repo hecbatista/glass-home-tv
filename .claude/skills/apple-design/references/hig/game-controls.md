@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/game-controls>
 > Section: Inputs
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS omitted)
 > Last change on Apple's site: 2025-06-09 (Updated touch control best practices, updated game controller mapping for UI, and added guidance for spatial game controller support in visionOS.)
 
 Precise, intuitive game controls enhance gameplay and can increase a player’s immersion in the game.

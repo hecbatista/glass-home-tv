@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/playing-haptics>
 > Section: Patterns
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2024-05-07 (Added guidance for playing haptics on Apple Pencil Pro.)
 
 Playing haptics can engage people’s sense of touch and bring their familiarity with the physical world into your app or game.

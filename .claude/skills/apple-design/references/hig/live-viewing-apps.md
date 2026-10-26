@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/live-viewing-apps>
 > Section: Patterns
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 
 As you design a live-viewing app, prioritize the content and create fun, fluid interactions that encourage immersion in the live-viewing experience.
 
@@ -65,4 +65,5 @@ If you support digital video recording (DVR) in the cloud, follow these guidelin
 
 ## Related guidelines
 
+- [Remotes](remotes.md)
 - [Playing video](playing-video.md)

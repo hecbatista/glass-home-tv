@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/progress-indicators>
 > Section: Components › Status
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2023-09-12 (Combined guidance common to all platforms.)
 
 Progress indicators let people know that your app isn’t stalled while it loads content or performs lengthy operations.
@@ -43,6 +43,8 @@ For developer guidance, see [ProgressView](https://developer.apple.com/documenta
 **Let people know when halting a process has a negative consequence.** When canceling a process results in lost progress, it’s helpful to provide an [alert](alerts.md) that includes an option to confirm the cancellation or resume the process.
 
 ## Platform considerations
+
+*No additional considerations for tvOS or visionOS.*
 
 ### Mobile (iOS, iPadOS)
 

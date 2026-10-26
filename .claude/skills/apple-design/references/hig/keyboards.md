@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/keyboards>
 > Section: Inputs
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS omitted)
 > Last change on Apple's site: 2025-06-09 (Moved game-specific key bindings guidance to the Game controls page.)
 
 A physical keyboard can be an essential input device for entering text, playing games, controlling apps, and more.

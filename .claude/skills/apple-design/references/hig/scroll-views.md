@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/scroll-views>
 > Section: Components › Presentation
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2026-06-08 (Updated guidance for scroll edge effects.)
 
 A scroll view lets people view content that’s larger than the view’s boundaries by moving the content vertically or horizontally.
@@ -55,6 +55,10 @@ For developer guidance, see [ScrollEdgeEffectStyle](https://developer.apple.com/
 In macOS, a *scroll indicator* is commonly called a *scroll bar*.
 
 **If necessary, use small or mini scroll bars in a panel.** When space is tight, you can use smaller scroll bars in panels that need to coexist with other windows. Be sure to use the same size for all controls in such a panel.
+
+### TV (tvOS)
+
+Views in tvOS can scroll, but they aren’t treated as distinct objects with scroll indicators. Instead, when content exceeds the size of the screen, the system automatically scrolls the interface to keep focused items visible.
 
 ## Change log
 

@@ -2,7 +2,7 @@
 
 > Source: <https://developer.apple.com/design/human-interface-guidelines/playing-audio>
 > Section: Patterns
-> Platforms covered: iOS, iPadOS, macOS (guidance specific to tvOS, visionOS, watchOS omitted)
+> Platforms covered: iOS, iPadOS, macOS, tvOS (guidance specific to visionOS, watchOS omitted)
 > Last change on Apple's site: 2023-06-21 (Updated to include guidance for visionOS.)
 
 People expect rich audio experiences that automatically adjust when the context changes on the device.
@@ -60,6 +60,10 @@ Although most apps and games rely on the system’s default interruption behavio
 ### Desktop (macOS)
 
 In macOS, notification sounds mix with other audio by default.
+
+### TV (tvOS)
+
+In tvOS, the system plays audio only when people initiate it, through interactions within apps and games or when performing device calibrations. For example, tvOS doesn’t play sounds to accompany components like alerts or notifications.
 
 ## Change log
 

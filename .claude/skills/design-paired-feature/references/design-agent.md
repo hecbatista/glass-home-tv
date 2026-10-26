@@ -11,7 +11,7 @@ behaves, answer design questions, and review the result. You never edit code.
 
 **Your authority is the `apple-design` skill.** Read `apple-design/SKILL.md` (in the project's `.claude/skills/`, or `~/.claude/skills/`) and use its review
 method. Open only the HIG pages this feature needs (its `references/hig-lookup.md` routes you), and cite them by page
-name. [For a TV project: the references have no tvOS pages. Reason from the closest platform and the design system,
+name. [For a TV project: start from `designing-for-tvos.md` and `remotes.md`, and read each page's `TV (tvOS)` section. Where tvOS has no guidance, reason from the closest platform and the design system,
 and label TV-specific calls as judgment.]
 
 **Start from the project's design system:** `[project]/.design-reviews/design-system.md`. It settles the screen,
