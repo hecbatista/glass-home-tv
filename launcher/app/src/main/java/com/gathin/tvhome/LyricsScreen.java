@@ -51,6 +51,8 @@ final class LyricsScreen {
     private final FrameLayout root;
     private final FrameLayout screen;
     private final ImageView cover;
+    /** The cover shrinks and dims while the song is paused, as on the panel. */
+    private final PausedCover pausedCover;
     private final TextView title, artist, none;
     private final ImageButton prev, playPause, next;
     private final ImageView source;
@@ -93,6 +95,10 @@ final class LyricsScreen {
         cover.setClipToOutline(true);
         cover.setElevation(px(40));
         if (android.os.Build.VERSION.SDK_INT >= 28) cover.setOutlineSpotShadowColor(0xFF000000);
+        GradientDrawable dim = new GradientDrawable();
+        dim.setCornerRadius(px(36));
+        cover.setForeground(dim);
+        pausedCover = new PausedCover(cover, dim, animations, false);
         screen.addView(cover, at(112, 158, 540, 540));
 
         title = text(40, R.font.inter_semibold, 0xFFFFFFFF);
@@ -253,7 +259,9 @@ final class LyricsScreen {
         artist.setVisibility(TextUtils.isEmpty(by) ? View.GONE : View.VISIBLE);
     }
 
+    /** The play/pause glyph and the cover's paused look, which springs only while the screen is open. */
     void setPlaying(boolean playing) {
+        pausedCover.setPlaying(playing, isOpen());
         if (playingShown != null && playingShown == playing) return;
         playingShown = playing;
         playPause.setImageResource(playing ? R.drawable.ic_np_pause : R.drawable.ic_np_play);

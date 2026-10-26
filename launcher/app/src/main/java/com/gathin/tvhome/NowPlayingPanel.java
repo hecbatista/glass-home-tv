@@ -60,6 +60,8 @@ final class NowPlayingPanel {
     /** The top bar's buttons: the panel sits halfway between their bottom edge and the dock band. */
     private View above;
     private final ImageView art;
+    /** The cover shrinks and dims while the song is paused. */
+    private final PausedCover pausedArt;
     private final TextView title, artist;
     private final ImageButton prev, playPause, next;
     /** The bottom-right corner: an icon for where the music plays, its glyph this far from both edges. */
@@ -213,8 +215,15 @@ final class NowPlayingPanel {
         });
         art.setClipToOutline(true);
         row.addView(art, new LinearLayout.LayoutParams(artPx, artPx));
+        GradientDrawable dim = new GradientDrawable();
+        dim.setCornerRadius(dp(14));
+        pausedArt = new PausedCover(art, dim, animations, light);
+        // The paused dim in the foreground, set once: replacing a foreground drops its drawable's callback, and the
+        // dim would stop redrawing.
+        if (!lyricsEnabled) art.setForeground(dim);
         if (lyricsEnabled) {
-            // OK on the cover opens the full-screen lyrics. Focused, it gets Home's white ring inside its corners.
+            // OK on the cover opens the full-screen lyrics. Focused, it gets Home's white ring inside its corners, above
+            // the dim.
             art.setFocusable(true);
             art.setContentDescription(ctx.getString(R.string.lyrics_open));
             GradientDrawable ring = new GradientDrawable();
@@ -223,7 +232,8 @@ final class NowPlayingPanel {
             StateListDrawable focusRing = new StateListDrawable();
             focusRing.addState(new int[]{android.R.attr.state_focused}, ring);
             focusRing.addState(new int[]{}, new GradientDrawable());
-            art.setForeground(focusRing);
+            art.setForeground(new android.graphics.drawable.LayerDrawable(
+                    new android.graphics.drawable.Drawable[]{dim, focusRing}));
             art.setOnClickListener(v -> openScreen());
         }
 
@@ -860,8 +870,12 @@ final class NowPlayingPanel {
         if (!TextUtils.equals(view.getText(), text)) view.setText(text);
     }
 
-    /** The play/pause glyph, swapped only when the state flips (a refresh would otherwise reload it each time). */
+    /**
+     * The play/pause glyph, swapped only when the state flips (a refresh would otherwise reload it each time), and the
+     * cover's paused look: it springs only while the panel is up, so a panel that appears paused starts small.
+     */
     private void showPlaying(boolean on) {
+        pausedArt.setPlaying(on, panel.getVisibility() == View.VISIBLE);
         if (playIconShown != null && playIconShown == on) return;
         playIconShown = on;
         playPause.setImageResource(on ? R.drawable.ic_np_pause : R.drawable.ic_np_play);
