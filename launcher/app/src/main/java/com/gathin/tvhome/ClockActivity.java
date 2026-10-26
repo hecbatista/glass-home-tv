@@ -14,31 +14,52 @@ import android.view.View;
 public class ClockActivity extends Activity {
 
     private ClockScene scene;
+    /** standby_clock: the StandBy face, as the system screensaver shows it. */
+    private StandbyScene standby;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.dream_clock);
+        Config cfg = Config.load(this);
+        if (cfg.standbyClock) {
+            standby = new StandbyScene(this, getWindow(), cfg.spotifyConnect, cfg.animations && !cfg.reducedMotion,
+                    this::finish);
+            setContentView(standby.view());
+        } else {
+            setContentView(R.layout.dream_clock);
+            scene = new ClockScene(getWindow().getDecorView());
+        }
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN
                 | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE);
-        scene = new ClockScene(getWindow().getDecorView());
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        scene.start();
+        if (standby != null) standby.start();
+        else scene.start();
     }
 
     @Override
     protected void onPause() {
-        scene.stop();
+        if (standby != null) standby.stop();
+        else scene.stop();
         super.onPause();
         finish();   // never left behind in the back stack
     }
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
+        if (standby != null) {
+            StandbyKeys.Kind kind = StandbyKeys.of(event);
+            if (kind == StandbyKeys.Kind.PASS) return super.dispatchKeyEvent(event);
+            if (kind == StandbyKeys.Kind.MEDIA) {
+                if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
+                    standby.mediaKey(event.getKeyCode());
+                }
+                return true;
+            }
+        }
         // The key that wakes the clock should not also act on Home, so it is consumed here.
         if (event.getAction() == KeyEvent.ACTION_UP) finish();
         return true;

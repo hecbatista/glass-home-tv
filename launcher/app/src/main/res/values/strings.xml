@@ -165,6 +165,8 @@
     <string name="alarm_snoozed_until">Snoozed until %1$s</string>
     <string name="alarm_test_caption">Test</string>
     <string name="sleep_mode">Sleep Mode</string>
+    <!-- Glass Home's StandBy screensaver (standby_clock): the second line while the song is paused. -->
+    <string name="standby_paused">Paused</string>
     <string name="alarm_and_sleep">Alarm and Sleep</string>
     <string name="alarm_state">Alarm: %1$s</string>
     <string name="alarm_time">Time</string>

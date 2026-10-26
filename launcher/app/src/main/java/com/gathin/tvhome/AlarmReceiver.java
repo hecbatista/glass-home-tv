@@ -20,7 +20,8 @@ public final class AlarmReceiver extends BroadcastReceiver {
         PowerManager pm = ctx.getSystemService(PowerManager.class);
         // Was the TV on already (and not dimmed by sleep mode)? Then someone is up: no sunrise, it rings at the alarm
         // time over whatever plays.
-        boolean wasOn = pm.isInteractive() && !SleepMode.isOn();
+        // The night screensaver counts as off too: the sunrise replaces it.
+        boolean wasOn = pm.isInteractive() && !SleepMode.isOn() && !StandbyScene.showingNight();
         boolean daily = !intent.getBooleanExtra(AlarmScheduler.EXTRA_SNOOZED, false)
                 && !intent.getBooleanExtra(AlarmScheduler.EXTRA_TEST, false);
         long sunriseAt = intent.getLongExtra(AlarmScheduler.EXTRA_SUNRISE_AT, alarmAt);
@@ -36,6 +37,7 @@ public final class AlarmReceiver extends BroadcastReceiver {
                 | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE, "tvhome:alarm");
         if (!wasOn) wake.acquire(10_000);
         SleepMode.clear();   // a dimmed TV gets the sunrise as intended
+        StandbyScene.endCurrent();   // and the screensaver ends before the alarm's screen
         ctx.startActivity(new Intent(ctx, AlarmActivity.class).putExtras(intent)
                 .putExtra(AlarmActivity.EXTRA_WAS_ON, wasOn)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));

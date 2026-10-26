@@ -744,19 +744,22 @@ final class NowPlayingPanel {
 
     /** Shows the icon with this SpotifyPlayback.sourceIcon name in the corner. Named here, not looked up, so the
      *  release build's resource shrinker sees every one of them in use. */
-    private void setSource(String icon) {
-        int id;
-        switch (icon) {
-            case "smartphone": id = R.drawable.ic_src_smartphone; break;
-            case "laptop_mac": id = R.drawable.ic_src_laptop_mac; break;
-            case "tablet_mac": id = R.drawable.ic_src_tablet_mac; break;
-            case "tv": id = R.drawable.ic_src_tv; break;
-            case "speaker": id = R.drawable.ic_src_speaker; break;
-            case "smart_display": id = R.drawable.ic_src_smart_display; break;
-            case "directions_car": id = R.drawable.ic_src_directions_car; break;
-            case "sports_esports": id = R.drawable.ic_src_sports_esports; break;
-            default: id = R.drawable.ic_src_devices; break;
+    static int sourceIconRes(String icon) {
+        switch (icon == null ? "" : icon) {
+            case "smartphone": return R.drawable.ic_src_smartphone;
+            case "laptop_mac": return R.drawable.ic_src_laptop_mac;
+            case "tablet_mac": return R.drawable.ic_src_tablet_mac;
+            case "tv": return R.drawable.ic_src_tv;
+            case "speaker": return R.drawable.ic_src_speaker;
+            case "smart_display": return R.drawable.ic_src_smart_display;
+            case "directions_car": return R.drawable.ic_src_directions_car;
+            case "sports_esports": return R.drawable.ic_src_sports_esports;
+            default: return R.drawable.ic_src_devices;
         }
+    }
+
+    private void setSource(String icon) {
+        int id = sourceIconRes(icon);
         if (icon.equals(sourceShown)) return;
         sourceShown = icon;
         Bitmap glyph = trimmed(id);

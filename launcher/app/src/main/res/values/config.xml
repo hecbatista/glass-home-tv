@@ -67,6 +67,9 @@
          playing; any button brings it back. Needs the Home key helper (HomeKeyService). A theme can set
          "sleep_mode" too. -->
     <bool name="sleep_mode">true</bool>
+    <!-- Glass Home: the screensaver (and Home's idle clock) is a StandBy-style clock with the playing song's cover in a
+         corner, red at night. A theme can set "standby_clock" too. -->
+    <bool name="standby_clock">true</bool>
     <!-- Glass Home: how many minutes Home keeps the screen on after the last button press, before the TV's own
          screensaver and sleep timer take over (0, the default, leaves it to the TV; -1 keeps it on while Home shows).
          Launcher settings offers 30 minutes, 1 hour, 2 hours and always. A theme can set "home_awake_minutes" too. -->
