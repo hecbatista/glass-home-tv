@@ -9,13 +9,17 @@ import android.view.View;
 /**
  * The clock screensaver shown by Home itself after home_idle_clock_minutes without input. Some TVs' own
  * screens (CVTE's live TV) do not keep the screen on, so the system screensaver would cut into programmes;
- * this one only ever starts from Home. Any key returns to Home.
+ * this one only ever starts from Home. Any key returns to Home. Glass Home's Night Clock (Home's clock pressed)
+ * opens it too, with the night face forced (StandbyFace.forceNight).
  */
 public class ClockActivity extends Activity {
 
     private ClockScene scene;
     /** standby_clock: the StandBy face, as the system screensaver shows it. */
     private StandbyScene standby;
+    private boolean standbyStarted;
+    /** A key went down on this screen: only its release ends it, never the release of the OK that opened it. */
+    private boolean keyDown;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,14 +40,34 @@ public class ClockActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (standby != null) standby.start();
-        else scene.start();
+        if (standby == null) {
+            scene.start();
+            return;
+        }
+        // The backlight changes only once Home has faded to black (onEnterAnimationComplete): during the fade a step
+        // in brightness would read as a jump. The fallback covers firmware that never reports the animation's end.
+        getWindow().getDecorView().postDelayed(this::startStandby, 1000);
+    }
+
+    @Override
+    public void onEnterAnimationComplete() {
+        super.onEnterAnimationComplete();
+        if (standby != null) startStandby();
+    }
+
+    private void startStandby() {
+        if (standbyStarted || isFinishing()) return;
+        standbyStarted = true;
+        standby.start();
     }
 
     @Override
     protected void onPause() {
-        if (standby != null) standby.stop();
-        else scene.stop();
+        if (standby != null) {
+            if (standbyStarted) standby.stop();
+        } else {
+            scene.stop();
+        }
         super.onPause();
         finish();   // never left behind in the back stack
     }
@@ -61,7 +85,11 @@ public class ClockActivity extends Activity {
             }
         }
         // The key that wakes the clock should not also act on Home, so it is consumed here.
-        if (event.getAction() == KeyEvent.ACTION_UP) finish();
+        if (event.getAction() == KeyEvent.ACTION_DOWN) keyDown = true;
+        else if (event.getAction() == KeyEvent.ACTION_UP && keyDown) {
+            StandbyFace.clearForcedNight();   // Night Clock ends with the key that ends it
+            finish();
+        }
         return true;
     }
 

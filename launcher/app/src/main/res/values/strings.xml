@@ -202,6 +202,8 @@
     <!-- Glass Home: the round button beside Settings, the label shown under it when focused and the title of the
          Launcher settings screen it opens. -->
     <string name="appearance">Customize Home</string>
+    <!-- Glass Home: shown under Home's clock when it is focused; OK opens StandBy's night face (Night Clock). -->
+    <string name="night_clock">Night Clock</string>
     <string name="background_label">Background</string>
     <string name="background_light">Light</string>
     <string name="background_grey">Grey</string>

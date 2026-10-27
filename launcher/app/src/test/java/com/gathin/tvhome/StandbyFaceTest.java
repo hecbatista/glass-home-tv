@@ -75,4 +75,43 @@ public class StandbyFaceTest {
         assertEquals(1f, none[0], 0f);
         assertEquals(0f, none[1], 0f);
     }
+
+    private static long at(int year, int month, int day, int hour, int minute) {
+        Calendar c = Calendar.getInstance(NY);
+        c.clear();
+        c.set(year, month, day, hour, minute);
+        return c.getTimeInMillis();
+    }
+
+    @Test public void nightClockRunsUntilTheNextSeven() {
+        assertEquals(at(2026, Calendar.OCTOBER, 27, 7, 0), StandbyFace.nightEndAfter(at(2026, Calendar.OCTOBER, 27, 6, 30), NY));
+        assertEquals(at(2026, Calendar.OCTOBER, 28, 7, 0), StandbyFace.nightEndAfter(at(2026, Calendar.OCTOBER, 27, 7, 0), NY));
+        assertEquals(at(2026, Calendar.OCTOBER, 28, 7, 0), StandbyFace.nightEndAfter(at(2026, Calendar.OCTOBER, 27, 7, 30), NY));
+        assertEquals(at(2026, Calendar.OCTOBER, 28, 7, 0), StandbyFace.nightEndAfter(at(2026, Calendar.OCTOBER, 27, 23, 0), NY));
+        assertEquals(at(2026, Calendar.OCTOBER, 28, 7, 0), StandbyFace.nightEndAfter(at(2026, Calendar.OCTOBER, 27, 15, 0), NY));
+    }
+
+    @Test public void nightClockKeepsSevenAcrossTheClockChanges() {
+        // 1 November 2026, 2:00 back to 1:00; 8 March 2026, 2:00 on to 3:00.
+        long fallBack = StandbyFace.nightEndAfter(at(2026, Calendar.OCTOBER, 31, 23, 0), NY);
+        assertEquals(at(2026, Calendar.NOVEMBER, 1, 7, 0), fallBack);
+        assertEquals(9 * 60 * 60_000L, fallBack - at(2026, Calendar.OCTOBER, 31, 23, 0));
+        long springOn = StandbyFace.nightEndAfter(at(2026, Calendar.MARCH, 7, 23, 0), NY);
+        assertEquals(at(2026, Calendar.MARCH, 8, 7, 0), springOn);
+        assertEquals(7 * 60 * 60_000L, springOn - at(2026, Calendar.MARCH, 7, 23, 0));
+    }
+
+    @Test public void nightClockIsNightUntilItsEndOrItIsCleared() {
+        long three = at(2026, Calendar.OCTOBER, 27, 15, 0);
+        StandbyFace.forceNight(three, NY);
+        try {
+            assertTrue(StandbyFace.forced(three));
+            assertTrue(StandbyFace.forced(at(2026, Calendar.OCTOBER, 28, 6, 59)));
+            assertFalse(StandbyFace.forced(at(2026, Calendar.OCTOBER, 28, 7, 0)));   // the rule takes over
+            StandbyFace.clearForcedNight();
+            assertFalse(StandbyFace.forced(three));
+        } finally {
+            StandbyFace.clearForcedNight();
+        }
+    }
 }

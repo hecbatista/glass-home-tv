@@ -69,6 +69,7 @@ public class ClockDream extends DreamService {
             default:
                 if (event.getAction() == KeyEvent.ACTION_UP) {
                     SleepMode.clear();   // one press brings the picture back from sleep mode too
+                    StandbyFace.clearForcedNight();
                     finish();
                 }
                 return true;

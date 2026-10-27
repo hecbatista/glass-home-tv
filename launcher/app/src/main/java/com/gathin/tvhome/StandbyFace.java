@@ -12,7 +12,39 @@ final class StandbyFace {
     /** An alarm whose sunrise starts within this long ends the night early (or late) instead of 07:00. */
     static final long WAKE_WINDOW_MS = 14 * 60 * 60_000L;
 
+    /**
+     * Night Clock (Home's clock pressed): the night face until this time, epoch ms, whatever the hour; 0 when off.
+     * In memory only, so a restart falls back to the rule. Cleared by the key that ends StandBy and by screen off.
+     */
+    static volatile long nightUntil;
+
     private StandbyFace() {}
+
+    /** The next night end after {@code now}: 06:30 gives 07:00 today, 07:00 or later 07:00 tomorrow. */
+    static long nightEndAfter(long now, java.util.TimeZone zone) {
+        java.util.Calendar c = java.util.Calendar.getInstance(zone);
+        c.setTimeInMillis(now);
+        c.set(java.util.Calendar.HOUR_OF_DAY, NIGHT_END / 60);
+        c.set(java.util.Calendar.MINUTE, NIGHT_END % 60);
+        c.set(java.util.Calendar.SECOND, 0);
+        c.set(java.util.Calendar.MILLISECOND, 0);
+        if (c.getTimeInMillis() <= now) c.add(java.util.Calendar.DAY_OF_MONTH, 1);
+        return c.getTimeInMillis();
+    }
+
+    /** Night Clock's night: on from now until the next night end, then the rule (night) takes over. */
+    static void forceNight(long now, java.util.TimeZone zone) {
+        nightUntil = nightEndAfter(now, zone);
+    }
+
+    static void clearForcedNight() {
+        nightUntil = 0;
+    }
+
+    /** Night Clock's night is still on at {@code now}. */
+    static boolean forced(long now) {
+        return now < nightUntil;
+    }
 
     /**
      * Night: sleep mode is on, or it is from 22:00 until the night ends. The night ends at {@code wake} (the alarm's

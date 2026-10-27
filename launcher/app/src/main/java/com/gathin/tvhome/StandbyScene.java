@@ -46,6 +46,14 @@ final class StandbyScene {
 
     /** The face on screen now, so the alarm can end it before its own screen (endCurrent). */
     private static WeakReference<StandbyScene> current = new WeakReference<>(null);
+    /**
+     * The face that just stopped, so the next one carries on without a blink or a jump: Night Clock (ClockActivity)
+     * gives way to the system screensaver after the TV's idle time.
+     */
+    private static final long HANDOFF_MS = 2000;
+    private static long handoffAt = -1, handoffStartedAt;
+    private static double handoffPhase;
+    private static NowPlayingFeed.Track handoffTrack;
 
     private final Context ctx;
     private final Window window;
@@ -59,7 +67,7 @@ final class StandbyScene {
     private final ImageView cover, source;
     private final GradientDrawable glowShapeA, glowShapeB;
     private final NowPlayingFeed feed;
-    private final double phase = Math.random() * 2 * Math.PI;
+    private double phase = Math.random() * 2 * Math.PI;
     private long startedAt;
 
     /** 0 day … 1 night, as drawn now. */
@@ -183,15 +191,38 @@ final class StandbyScene {
     }
 
     void start() {
+        long now = SystemClock.elapsedRealtime();
+        StandbyScene before = current.get();
+        boolean handoff = true;
+        NowPlayingFeed.Track carried = null;
+        if (before != null && before != this) {
+            phase = before.phase;
+            startedAt = before.startedAt;
+            if (before.musicShown) carried = before.shown;
+        } else if (handoffAt >= 0 && now - handoffAt < HANDOFF_MS) {
+            phase = handoffPhase;
+            startedAt = handoffStartedAt;
+            carried = handoffTrack;
+        } else {
+            handoff = false;
+            startedAt = now;
+        }
+        handoffAt = -1;
+        handoffTrack = null;
         current = new WeakReference<>(this);
-        startedAt = SystemClock.elapsedRealtime();
         nightTarget = isNight();
         night = nightTarget ? 1f : 0f;
         // Black and at the right backlight before anything shows, then the face fades in.
         setBacklight(nightTarget ? Sunrise.FLOOR : StandbyFace.DAY_BACKLIGHT);
+        if (carried != null) showMusicNow(carried);
         paint();
-        face.setAlpha(0f);
-        face.animate().alpha(1f).setDuration(1200).setInterpolator(new DecelerateInterpolator()).start();
+        face.animate().cancel();
+        if (handoff) {
+            face.setAlpha(1f);   // the same face, in the same place: no fade
+        } else {
+            face.setAlpha(0f);
+            face.animate().alpha(1f).setDuration(1200).setInterpolator(new DecelerateInterpolator()).start();
+        }
         feed.start();
         main.post(tick);
         main.post(drift);
@@ -199,6 +230,10 @@ final class StandbyScene {
 
     void stop() {
         if (current.get() == this) current = new WeakReference<>(null);
+        handoffAt = SystemClock.elapsedRealtime();
+        handoffPhase = phase;
+        handoffStartedAt = startedAt;
+        handoffTrack = musicShown ? shown : null;
         feed.stop();
         main.removeCallbacksAndMessages(null);
         if (crossing != null) crossing.cancel();
@@ -218,6 +253,7 @@ final class StandbyScene {
         Calendar c = Calendar.getInstance();
         int minute = c.get(Calendar.HOUR_OF_DAY) * 60 + c.get(Calendar.MINUTE);
         long now = System.currentTimeMillis();
+        if (StandbyFace.forced(now)) return true;
         int wake = StandbyFace.wakeMinute(AlarmScheduler.planned(ctx, now), now, TimeZone.getDefault());
         return StandbyFace.night(minute, SleepMode.isOn(), wake);
     }
@@ -402,6 +438,17 @@ final class StandbyScene {
             glowB.setAlpha(0f);
         }).start();
         paint();
+    }
+
+    /** The row as it was on the face this one takes over from: no slide, no fade. */
+    private void showMusicNow(NowPlayingFeed.Track t) {
+        musicShown = true;
+        fill(t);
+        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) clock.getLayoutParams();
+        lp.topMargin = top(clock, 641);
+        clock.setLayoutParams(lp);
+        row.setAlpha(1f);
+        glowLevel = 1f;
     }
 
     /** Music starts or ends: the clock slides between the centre and above the row (Reduce Motion: a crossfade). */

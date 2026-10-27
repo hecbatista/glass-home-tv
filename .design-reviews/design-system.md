@@ -59,6 +59,13 @@ code wins if they disagree; then fix this file. All positions are TV px on the 1
   - Dock and grid tiles zoom to ×1.10 and get a white border with a soft glow; there is no white fill over the
     banner.
   - The Customize Home button shows its name, 26 px under it, while focused.
+  - **Home's clock is a control (Night Clock):**
+    - It is the top bar's first stop: Left from the first button.
+    - Focused, a pill appears behind the time and AM/PM only: ink edges ± 32, y 86–214, radius 64, #F5FFFFFF (#111216
+      on Light). The divider hides, and "Night Clock" shows 26 px under it at x 112.
+    - No scale, and at rest no surface.
+    - The top bar is full: a new top-bar control has to be an existing element made focusable, not another button
+      (`bedtime-standby.md`).
 - **Selection** is never shown like focus: a blue checkmark (Material Symbols "check") on the resting pill.
 - **Glass (`GlassMaterial`):**
   - Used by the top bar's modules, the round button, the Now Playing panel and the dock band.

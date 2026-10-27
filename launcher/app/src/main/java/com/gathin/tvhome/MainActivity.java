@@ -62,6 +62,7 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.animation.AnimationUtils;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LayoutAnimationController;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -90,6 +91,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 import java.util.Map;
 import java.util.Set;
 
@@ -172,6 +174,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private boolean hideRowsAtDock, gridRowsHidden = true;
     /** Glass Home's Appearance button beside Settings, or null. */
     private TextView btnAppearance;
+    /** Glass Home's Night Clock: Home's clock as a button that opens StandBy's night face now (setUpNightClock). */
+    private TextView nightClock;
+    private static boolean nightClockScreenOffWatched;
+    /** Home is coming back from the Night Clock: focus goes back to the clock, not to the dock. */
+    private boolean nightClockReturn;
     private ImageView heroArt;
     private static final float HERO_ART_ALPHA = 0.5f;
     /** Softened artwork per app (HeroArt, about 5 KB each), made the first time its dock tile is focused. */
@@ -750,12 +757,17 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 if (rtlMenuBar) Collections.reverse(row);
                 int at = row.indexOf(v) + (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT ? 1 : -1);
                 if (at >= 0 && at < row.size()) row.get(at).requestFocus();
+                else if (at < 0 && nightClock != null) nightClock.requestFocus();
                 return true;
             }
             int firstButton = btnInputs.getVisibility() == View.VISIBLE ? R.id.btnInputs : firstTopButton().getId();
             int leftButton = rtlMenuBar ? R.id.btnSettings : firstButton;
             int lastButton = btnAppearance != null ? btnAppearance.getId() : R.id.btnSettings;
             int rightButton = rtlMenuBar ? firstButton : lastButton;
+            if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT && v.getId() == leftButton && nightClock != null) {
+                nightClock.requestFocus();
+                return true;
+            }
             if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) return v.getId() == leftButton;
             return keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && v.getId() == rightButton;
         };
@@ -774,6 +786,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             }
         }
         if (btnAppearance != null) addAppearanceLabel();
+        if (glassHome && !topMenu && !festive && cfg.standbyClock) setUpNightClock(rtlMenuBar);
         if (festive) applyFestiveSkin((TextView) btnInputs, (TextView) btnSettings);
 
         // Hide the glass when focus leaves the tiles.
@@ -870,6 +883,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (openLauncherSettingsIfAsked(intent)) return;
         if (openInputsIfAsked(intent)) return;
         if (intent == null || !intent.hasCategory(Intent.CATEGORY_HOME)) return;
+        nightClockReturn = false;   // the Home key goes to the first tile, from the Night Clock too
         grid.scrollToPosition(0);
         lastFocused = 0;
         lastFocusedKey = adapter.getItemCount() > 0 ? adapter.keyAt(0) : null;
@@ -929,6 +943,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 break;
             default:
                 break;
+        }
+        if (nightClockReturn) {
+            nightClockReturn = false;
+            // After the tiles' own refocus, which grid.post queues first.
+            if (nightClock != null) grid.post(nightClock::requestFocus);
         }
         if (openLiveTvAfterBoot()) return;
         updateGreeting();
@@ -1852,6 +1871,145 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             if (!animations || reducedMotion) label.setAlpha(focused ? 1f : 0f);
             else label.animate().alpha(focused ? 1f : 0f).setDuration(160).start();
         });
+    }
+
+    /**
+     * Night Clock (.design-reviews/bedtime-standby.md): Home's clock is the top bar's first stop, left of the first
+     * button. Focused, a solid pill wraps the time and "Night Clock" shows under it; OK opens StandBy with the night
+     * face until the morning (StandbyFace.forceNight). At rest the clock looks as it always has.
+     */
+    private void setUpNightClock(boolean rtlMenuBar) {
+        TextView clock = findViewById(R.id.clock);
+        TextView ampm = findViewById(R.id.ampm);
+        ViewGroup clockRow = (ViewGroup) clock.getParent();
+        View divider = clockRow.getChildAt(clockRow.indexOfChild(ampm) + 1);
+        View settings = findViewById(R.id.btnSettings);
+        nightClock = clock;
+
+        View pill = new View(this);
+        GradientDrawable fill = new GradientDrawable();
+        fill.setCornerRadius(32 * density);
+        fill.setColor(lightInk ? Appearance.INK_DARK : 0xF5FFFFFF);
+        pill.setBackground(fill);
+        pill.setAlpha(0f);
+        pill.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        // Behind the header, so the time draws over it.
+        View header = clockRow;
+        while (header.getParent() != root) header = (View) header.getParent();
+        root.addView(pill, root.indexOfChild(header), new FrameLayout.LayoutParams(0, 0));
+
+        TextView label = new TextView(this);
+        label.setText(R.string.night_clock);
+        label.setTypeface(getResources().getFont(R.font.inter_semibold));
+        label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f);
+        label.setIncludeFontPadding(false);
+        label.setTextColor(Appearance.ink(lightInk));
+        label.setAlpha(0f);
+        label.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        root.addView(label, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        int clockRest = clock.getCurrentTextColor(), ampmRest = ampm.getCurrentTextColor();
+        int onPill = lightInk ? 0xFFFFFFFF : Appearance.INK_DARK;
+        ArgbEvaluator argb = new ArgbEvaluator();
+        ValueAnimator focus = ValueAnimator.ofFloat(0f, 1f);
+        focus.setDuration(160);
+        focus.setInterpolator(new DecelerateInterpolator());
+        focus.addUpdateListener(a -> {
+            float f = (float) a.getAnimatedValue();
+            pill.setAlpha(f);
+            label.setAlpha(f);
+            divider.setAlpha(1f - f);
+            clock.setTextColor((int) argb.evaluate(f, clockRest, onPill));
+            ampm.setTextColor((int) argb.evaluate(f, ampmRest, onPill));
+        });
+        // From the first ink edge of the time to the last of AM/PM (or of the time in 24-hour), 32 px each side, on
+        // the top bar modules' line.
+        Runnable place = () -> {
+            Rect bar = new Rect(0, 0, settings.getWidth(), settings.getHeight());
+            root.offsetDescendantRectToMyCoords(settings, bar);
+            int left = inkEdge(clock, true), right = TextUtils.isEmpty(ampm.getText()) || ampm.getVisibility() != View.VISIBLE
+                    ? inkEdge(clock, false) : inkEdge(ampm, false);
+            int pad = Math.round(16 * density);
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) pill.getLayoutParams();
+            lp.width = right - left + 2 * pad;
+            lp.height = bar.height();
+            pill.setLayoutParams(lp);
+            pill.setX(left - pad);
+            pill.setY(bar.top);
+            label.setX(left);
+            label.setY(bar.bottom + 13 * density);
+        };
+        clock.setFocusable(true);
+        clock.setClickable(true);
+        clock.setOnClickListener(v -> startNightClock());
+        clock.setOnFocusChangeListener((v, focused) -> {
+            if (focused) {
+                place.run();
+                clock.setContentDescription((getString(R.string.night_clock) + ", " + clock.getText() + " " + ampm.getText()).trim());
+            }
+            if (!animations || reducedMotion) {
+                focus.cancel();
+                focus.setCurrentFraction(focused ? 1f : 0f);
+            } else if (focused) {
+                focus.start();
+            } else {
+                focus.reverse();
+            }
+        });
+        // 12:59 to 1:00 changes the time's width while it is focused.
+        clock.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
+            if (clock.isFocused() && r - l != or - ol) place.run();
+        });
+        clock.setOnKeyListener((v, keyCode, event) -> {
+            if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
+            switch (keyCode) {
+                case KeyEvent.KEYCODE_DPAD_LEFT:
+                case KeyEvent.KEYCODE_DPAD_UP:
+                    return true;
+                case KeyEvent.KEYCODE_DPAD_RIGHT: {
+                    List<View> row = new ArrayList<>();
+                    for (View b : new View[]{btnInputs, btnWifi, btnReorder, btnLibraryTop, settings, btnAppearance}) {
+                        if (b != null && b.getVisibility() == View.VISIBLE) row.add(b);
+                    }
+                    if (rtlMenuBar) Collections.reverse(row);
+                    if (!row.isEmpty()) row.get(0).requestFocus();
+                    return true;
+                }
+                case KeyEvent.KEYCODE_DPAD_DOWN:
+                    if (nowPlaying != null && nowPlaying.isShown()) nowPlaying.focus();
+                    else focusTile(lastFocused % COLUMNS);
+                    return true;
+                default:
+                    return false;
+            }
+        });
+    }
+
+    /** A text view's first (or last) ink edge in root coordinates, from the glyphs' bounds rather than the box. */
+    private int inkEdge(TextView t, boolean first) {
+        Rect box = new Rect(0, 0, t.getWidth(), t.getHeight());
+        root.offsetDescendantRectToMyCoords(t, box);
+        CharSequence text = t.getText();
+        Rect ink = new Rect();
+        t.getPaint().getTextBounds(text.toString(), 0, text.length(), ink);
+        return box.left + t.getPaddingLeft() + (first ? ink.left : ink.right);
+    }
+
+    /** Night Clock pressed: StandBy now, with the night face until the morning, over a fade to black. */
+    private void startNightClock() {
+        StandbyFace.forceNight(System.currentTimeMillis(), TimeZone.getDefault());
+        if (!nightClockScreenOffWatched) {
+            nightClockScreenOffWatched = true;
+            // The TV going to standby ends the night clock: it wakes to the usual rule.
+            getApplicationContext().registerReceiver(new BroadcastReceiver() {
+                @Override public void onReceive(Context c, Intent i) {
+                    StandbyFace.clearForcedNight();
+                }
+            }, new IntentFilter(Intent.ACTION_SCREEN_OFF));
+        }
+        nightClockReturn = true;
+        startActivity(new Intent(this, ClockActivity.class));
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
     }
 
     /** Glass Home's header: a larger, heavier clock in Inter Display, and dark ink on a light background. */
