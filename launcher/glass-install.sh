@@ -20,12 +20,12 @@ APK=app/build/outputs/apk/release/app-release.apk
 OUT=$("$PY" -I ../tools/tv.py 'pm install -r /data/local/tmp/tvhome.apk; rm -f /data/local/tmp/tvhome.apk')
 echo "$OUT"
 case "$OUT" in *Success*) ;; *) echo "ERROR: pm install failed" >&2; exit 1 ;; esac
-"$PY" -I ../tools/tv.py 'pm grant com.gathin.tvhome android.permission.ACCESS_FINE_LOCATION 2>/dev/null
-settings put secure enabled_accessibility_services com.gathin.tvhome/.HomeKeyService
+"$PY" -I ../tools/tv.py 'pm grant io.github.hecbatista.glasshome android.permission.ACCESS_FINE_LOCATION 2>/dev/null
+settings put secure enabled_accessibility_services io.github.hecbatista.glasshome/.HomeKeyService
 settings put secure accessibility_enabled 1
-cmd notification allow_listener com.gathin.tvhome/com.gathin.tvhome.NowPlayingListener
-appops set com.gathin.tvhome SYSTEM_ALERT_WINDOW allow
-cmd package compile -m speed -f com.gathin.tvhome >/dev/null
+cmd notification allow_listener io.github.hecbatista.glasshome/io.github.hecbatista.glasshome.NowPlayingListener
+appops set io.github.hecbatista.glasshome SYSTEM_ALERT_WINDOW allow
+cmd package compile -m speed -f io.github.hecbatista.glasshome >/dev/null
 input keyevent WAKEUP
-am start -W -n com.gathin.tvhome/.MainActivity | grep -E "Status|Error"'
+am start -W -n io.github.hecbatista.glasshome/.MainActivity | grep -E "Status|Error"'
 echo "Installed. Press Home on the remote to see it."

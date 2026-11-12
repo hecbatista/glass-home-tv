@@ -31,13 +31,13 @@ until [ "$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 
 ./gradlew installDebug -q --console=plain
 # Android TV's own launcher outranks set-home-activity on this image, so it is switched off: on the emulator only, which
 # is thrown away, never on the TV (there Amazon's launcher stays Home and HomeKeyService redirects).
-"$ADB" shell 'pm grant com.gathin.tvhome android.permission.ACCESS_FINE_LOCATION 2>/dev/null
+"$ADB" shell 'pm grant io.github.hecbatista.glasshome android.permission.ACCESS_FINE_LOCATION 2>/dev/null
 pm disable-user --user 0 com.google.android.tvlauncher >/dev/null 2>&1
-cmd package set-home-activity com.gathin.tvhome/.MainActivity >/dev/null
-settings put secure enabled_accessibility_services com.gathin.tvhome/.HomeKeyService
+cmd package set-home-activity io.github.hecbatista.glasshome/.MainActivity >/dev/null
+settings put secure enabled_accessibility_services io.github.hecbatista.glasshome/.HomeKeyService
 settings put secure accessibility_enabled 1
-cmd notification allow_listener com.gathin.tvhome/com.gathin.tvhome.NowPlayingListener
-appops set com.gathin.tvhome SYSTEM_ALERT_WINDOW allow
+cmd notification allow_listener io.github.hecbatista.glasshome/io.github.hecbatista.glasshome.NowPlayingListener
+appops set io.github.hecbatista.glasshome SYSTEM_ALERT_WINDOW allow
 input keyevent WAKEUP
-am start -W -n com.gathin.tvhome/.MainActivity | grep -E "Status|Error"'
+am start -W -n io.github.hecbatista.glasshome/.MainActivity | grep -E "Status|Error"'
 echo "Installed on $ANDROID_SERIAL."

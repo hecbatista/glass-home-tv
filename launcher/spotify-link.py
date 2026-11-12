@@ -179,14 +179,14 @@ def main(argv):
             # Only token characters go into the shell command on the TV.
             if not all(c.isalnum() or c in "-_.~" for c in value):
                 fail("unexpected characters in the client ID or token; not sending it")
-        r = tv("am broadcast -a com.gathin.tvhome.action.SPOTIFY_LINK -n com.gathin.tvhome/.SpotifyLink"
+        r = tv("am broadcast -a io.github.hecbatista.glasshome.action.SPOTIFY_LINK -n io.github.hecbatista.glasshome/.SpotifyLink"
                f" --es client_id {link['client_id']} --es refresh_token {t['refresh_token']}")
         out = (r.stdout + r.stderr).strip()
         if 'data="linked"' not in out:
             fail("the TV did not take the link:\n" + out[-600:])
         print("Linked. The Now Playing panel picks it up the next time Home comes to the front.")
     elif cmd == "unlink":
-        r = tv("am broadcast -a com.gathin.tvhome.action.SPOTIFY_UNLINK -n com.gathin.tvhome/.SpotifyLink")
+        r = tv("am broadcast -a io.github.hecbatista.glasshome.action.SPOTIFY_UNLINK -n io.github.hecbatista.glasshome/.SpotifyLink")
         print((r.stdout + r.stderr).strip()[-300:])
     else:
         fail(f"unknown command {cmd!r}; see --help")

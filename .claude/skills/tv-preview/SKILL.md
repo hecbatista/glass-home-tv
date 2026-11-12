@@ -36,12 +36,12 @@ as AGENTS.md asks for the TV. Keep screenshots in `shots/`, which git ignores.
 | State | How |
 |---|---|
 | Home | `HOME` key |
-| Now Playing panel + lyrics card | `am broadcast -n com.gathin.tvhome/.DemoMedia --es title "Blinding Lights" --es artist "The Weeknd" --el duration 200040 --el pos 60000`, then `HOME`. Use a real song and its real length: lyrics come from LRCLIB. Extras: `--ez playing false`, `--es art /data/local/tmp/cover.jpg` (push it first), `--ez stop true` to end it. |
+| Now Playing panel + lyrics card | `am broadcast -n io.github.hecbatista.glasshome/.DemoMedia --es title "Blinding Lights" --es artist "The Weeknd" --el duration 200040 --el pos 60000`, then `HOME`. Use a real song and its real length: lyrics come from LRCLIB. Extras: `--ez playing false`, `--es art /data/local/tmp/cover.jpg` (push it first), `--ez stop true` to end it. |
 | Panel focused | From Home: `DPAD_RIGHT DPAD_RIGHT DPAD_UP` lands on play/pause |
 | Full-screen lyrics | Panel focused, then `DPAD_LEFT DPAD_LEFT DPAD_CENTER` (OK on the cover); `BACK` closes it |
-| Alarm ringing | `am broadcast -n com.gathin.tvhome/.AlarmTestReceiver --ei in 5 --ei sunrise 0`, wait about 8 s. `--ei sunrise 60` shows the sunrise first. |
-| Sleep mode | `am broadcast -n com.gathin.tvhome/.AlarmTestReceiver --ez sleep true` |
-| Screensaver (ClockDream) | `settings put secure screensaver_components com.gathin.tvhome/.ClockDream; am start -n com.android.systemui/.Somnambulator` |
+| Alarm ringing | `am broadcast -n io.github.hecbatista.glasshome/.AlarmTestReceiver --ei in 5 --ei sunrise 0`, wait about 8 s. `--ei sunrise 60` shows the sunrise first. |
+| Sleep mode | `am broadcast -n io.github.hecbatista.glasshome/.AlarmTestReceiver --ez sleep true` |
+| Screensaver (ClockDream) | `settings put secure screensaver_components io.github.hecbatista.glasshome/.ClockDream; am start -n com.android.systemui/.Somnambulator` |
 
 `DemoMedia` lives in `launcher/app/src/debug/`, so release APKs never contain it. A new feature that needs
 a state the emulator can't produce gets its own debug-only hook there, in the same style: a receiver that

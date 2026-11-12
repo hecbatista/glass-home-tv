@@ -57,7 +57,7 @@
         </intent>
         <intent>
             <action android:name="android.intent.action.MAIN" />
-            <category android:name="com.gathin.tvhome.category.DOCK_CARD" />
+            <category android:name="io.github.hecbatista.glasshome.category.DOCK_CARD" />
         </intent>
         <!-- stock_home_redirect: HomeKeyService looks up the stock launcher's HOME activity. -->
         <intent>
@@ -166,7 +166,7 @@
             android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
 
         <!-- Screensaver: pick it in Settings, or `settings put secure screensaver_components
-             com.gathin.tvhome/.ClockDream` over adb. -->
+             io.github.hecbatista.glasshome/.ClockDream` over adb. -->
         <!-- spotify_connect: the Spotify link, sent by launcher/spotify-link.py over ADB. Only the shell may send it:
              WRITE_SECURE_SETTINGS is granted to the adb shell, never to an ordinary app. -->
         <receiver
@@ -174,8 +174,8 @@
             android:exported="true"
             android:permission="android.permission.WRITE_SECURE_SETTINGS">
             <intent-filter>
-                <action android:name="com.gathin.tvhome.action.SPOTIFY_LINK" />
-                <action android:name="com.gathin.tvhome.action.SPOTIFY_UNLINK" />
+                <action android:name="io.github.hecbatista.glasshome.action.SPOTIFY_LINK" />
+                <action android:name="io.github.hecbatista.glasshome.action.SPOTIFY_UNLINK" />
             </intent-filter>
         </receiver>
 
