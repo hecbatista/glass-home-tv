@@ -23,7 +23,7 @@ public class ClockDream extends DreamService {
             setInteractive(true);
             setScreenBright(true);   // its own backlight: 0.50 by day, the dimmest at night
             standby = new StandbyScene(this, getWindow(), cfg.spotifyConnect, cfg.animations && !cfg.reducedMotion,
-                    this::finish);
+                    StandbyLyric.enabled(this, cfg), this::finish);
             setContentView(standby.view());
             return;
         }

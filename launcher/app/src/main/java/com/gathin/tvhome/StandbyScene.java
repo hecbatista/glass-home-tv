@@ -9,8 +9,10 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.text.Layout;
 import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.util.TypedValue;
@@ -41,7 +43,7 @@ import java.util.TimeZone;
  */
 final class StandbyScene {
     private static final int RED = 0xFFB81C0C, DAY = 0xFFE6E6EA;
-    private static final long TICK_MS = 2000, DRIFT_MS = 10_000;
+    private static final long TICK_MS = 2000, DRIFT_MS = 10_000, LYRIC_TICK_MS = 200;
     private static final long NOTHING_MS = 15_000, PAUSED_MS = 10 * 60_000L, COVER_WAIT_MS = 3000;
 
     /** The face on screen now, so the alarm can end it before its own screen (endCurrent). */
@@ -64,6 +66,9 @@ final class StandbyScene {
     private final FrameLayout root, face, row;
     private final View glowA, glowB;
     private final TextView date, clock, title, second;
+    /** Screensaver Lyrics: the line being sung, right of the song (.design-reviews/standby-lyrics.md). */
+    private final TextView lyric;
+    private final boolean lyricsOn;
     private final ImageView cover, source;
     private final GradientDrawable glowShapeA, glowShapeB;
     private final NowPlayingFeed feed;
@@ -85,6 +90,15 @@ final class StandbyScene {
     private View lightHolder;
     private WindowManager.LayoutParams lightLp;
     private NowPlayingFeed.Track shown, pending;
+    /** The lyrics of the song in the row (null: none, or not known yet), and the line on screen (-1: none). */
+    private Lyrics lyrics;
+    private String lyricsKey;
+    private int lyricShown = -1;
+    /** Until then the next line change draws at once: this face took over from one already showing it. */
+    private long lyricInstantUntil = -1;
+    private HandlerThread lookupThread;
+    private Handler lookup;
+    private final java.util.Set<String> lookingUp = new java.util.HashSet<>();
     private long pausedSince = -1;
 
     private final Runnable tick = new Runnable() {
@@ -102,12 +116,19 @@ final class StandbyScene {
         }
     };
     private final Runnable nothingPlaying = () -> showMusic(false);
+    private final Runnable lyricTick = new Runnable() {
+        @Override public void run() {
+            updateLyric();
+            main.postDelayed(this, LYRIC_TICK_MS);
+        }
+    };
     private final Runnable coverTimeout = () -> {
         if (pending != null) swapRow(pending);
     };
 
-    StandbyScene(Context ctx, Window window, boolean spotifyConnect, boolean motion, Runnable end) {
+    StandbyScene(Context ctx, Window window, boolean spotifyConnect, boolean motion, boolean lyricsOn, Runnable end) {
         this.ctx = ctx;
+        this.lyricsOn = lyricsOn;
         this.window = window;
         this.end = end;
         this.motion = motion;
@@ -137,7 +158,7 @@ final class StandbyScene {
         face.addView(clock, clp);
 
         row = new FrameLayout(ctx);
-        FrameLayout.LayoutParams rlp = new FrameLayout.LayoutParams(px(1312), px(240));
+        FrameLayout.LayoutParams rlp = new FrameLayout.LayoutParams(px(1696), px(240));
         rlp.leftMargin = px(112);
         rlp.topMargin = px(744);
         face.addView(row, rlp);
@@ -170,6 +191,22 @@ final class StandbyScene {
         second.setEllipsize(TextUtils.TruncateAt.END);
         line.addView(second);
         row.addView(line, at(272, top(second, 900) - px(744)));
+        // Two 40 px lines on the row's baselines (852 and 900), from x 1008 to the edge.
+        lyric = text(semibold, 40, -0.01f);
+        lyric.setSingleLine(false);
+        lyric.setMaxLines(2);
+        lyric.setEllipsize(TextUtils.TruncateAt.END);
+        // Balanced, so a second line is never one stray word; never hyphenated.
+        lyric.setBreakStrategy(Layout.BREAK_STRATEGY_BALANCED);
+        lyric.setHyphenationFrequency(Layout.HYPHENATION_FREQUENCY_NONE);
+        lyric.setLineSpacing(px(48) - lyric.getPaint().getFontMetricsInt(null), 1f);
+        lyric.setTextDirection(View.TEXT_DIRECTION_FIRST_STRONG);
+        lyric.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        lyric.setAlpha(0f);
+        lyric.setVisibility(View.GONE);
+        FrameLayout.LayoutParams llp = at(896, top(lyric, 852) - px(744));
+        llp.width = px(800);
+        row.addView(lyric, llp);
 
         feed = new NowPlayingFeed(ctx, spotifyConnect, this::onTrack);
     }
@@ -210,6 +247,12 @@ final class StandbyScene {
         handoffAt = -1;
         handoffTrack = null;
         current = new WeakReference<>(this);
+        lyricInstantUntil = handoff && carried != null ? now + 1000 : -1;
+        if (lyricsOn) {
+            lookupThread = new HandlerThread("standby-lyrics");
+            lookupThread.start();
+            lookup = new Handler(lookupThread.getLooper());
+        }
         nightTarget = isNight();
         night = nightTarget ? 1f : 0f;
         // Black and at the right backlight before anything shows, then the face fades in.
@@ -226,6 +269,7 @@ final class StandbyScene {
         feed.start();
         main.post(tick);
         main.post(drift);
+        if (lyricsOn) main.post(lyricTick);
     }
 
     void stop() {
@@ -236,6 +280,13 @@ final class StandbyScene {
         handoffTrack = musicShown ? shown : null;
         feed.stop();
         main.removeCallbacksAndMessages(null);
+        if (lookupThread != null) {
+            lookup.removeCallbacksAndMessages(null);
+            lookupThread.quitSafely();
+            lookupThread = null;
+            lookup = null;
+        }
+        lookingUp.clear();
         if (crossing != null) crossing.cancel();
         if (glowAnim != null) glowAnim.cancel();
         face.animate().cancel();
@@ -307,6 +358,7 @@ final class StandbyScene {
         int ink = Sunrise.blend(DAY, RED, night);
         clock.setTextColor(ink);
         title.setTextColor(ink);
+        lyric.setTextColor(ink);
         int dim = night >= 1f ? RED : Sunrise.blend(0x9EFFFFFF, RED, night);
         date.setTextColor(dim);
         second.setTextColor(dim);
@@ -375,6 +427,7 @@ final class StandbyScene {
         }
         if (t.playing) pausedSince = -1;
         else if (pausedSince < 0) pausedSince = SystemClock.elapsedRealtime();
+        lookUp(t);
         boolean newSong = shown == null || !TextUtils.equals(shown.title, t.title) || !TextUtils.equals(shown.artist, t.artist);
         if (!musicShown) {
             fill(t);
@@ -388,7 +441,8 @@ final class StandbyScene {
         // A new song: wait up to 3 s for its cover (Spotify sends the title first), then swap the row.
         pending = t;
         main.removeCallbacks(coverTimeout);
-        if (t.cover != null) swapRow(t);
+        // The lyrics decide the columns, so the swap waits for them too, in the same 3 s.
+        if (t.cover != null && lyricsSettled(t)) swapRow(t);
         else main.postDelayed(coverTimeout, COVER_WAIT_MS);
     }
 
@@ -421,6 +475,22 @@ final class StandbyScene {
             cover.setImageResource(R.drawable.ic_np_music);
         }
         cover.animate().alpha(t.playing ? 1f : 0.40f).setDuration(before == null ? 0 : 400).start();
+        if (lyricsOn && !TextUtils.equals(t.lyricsKey, lyricsKey)) {
+            lyricsKey = t.lyricsKey;
+            LrcLib.Result known = lyricsKey == null ? null : LrcLib.CACHE.get(lyricsKey);
+            lyrics = known == null ? null : known.lyrics;
+            lyricShown = -1;
+            lyric.animate().cancel();
+            lyric.setAlpha(0f);
+            lyric.setText(null);
+        }
+        setColumns(lyrics != null);
+        if (!t.playing && lyricShown >= 0) {
+            // Paused: the line goes with the cover's dim, and the current one comes back on resume.
+            lyricShown = -1;
+            lyric.animate().cancel();
+            lyric.animate().alpha(0f).setDuration(400).start();
+        }
         setText(title, t.title);
         setText(second, t.playing ? t.artist : ctx.getString(R.string.standby_paused));
         second.setVisibility(TextUtils.isEmpty(second.getText()) ? View.GONE : View.VISIBLE);
@@ -438,6 +508,80 @@ final class StandbyScene {
             glowB.setAlpha(0f);
         }).start();
         paint();
+    }
+
+    // ---- Screensaver Lyrics ------------------------------------------------------------------------------------
+
+    /** Looks this song's lyrics up on LRCLIB, off the main thread, unless they are known or on their way. */
+    private void lookUp(NowPlayingFeed.Track t) {
+        String key = t.lyricsKey;
+        if (lookup == null || key == null || LrcLib.CACHE.containsKey(key) || !lookingUp.add(key)) return;
+        LrcLib lrclib = new LrcLib();
+        lookup.post(() -> {
+            LrcLib.Result found;
+            try {
+                found = lrclib.find(t.title, t.artist, t.album, t.durationMs);
+            } catch (java.io.IOException e) {
+                found = null;   // offline: not cached, so a later showing asks again
+            }
+            final LrcLib.Result result = found;
+            main.post(() -> onLyrics(key, result));
+        });
+    }
+
+    private void onLyrics(String key, LrcLib.Result result) {
+        if (!lookingUp.remove(key)) return;   // stopped meanwhile
+        if (result != null) LrcLib.CACHE.put(key, result);
+        if (pending != null && key.equals(pending.lyricsKey) && pending.cover != null) {
+            swapRow(pending);   // the new song was waiting for these
+            return;
+        }
+        // Late for the song in the row: only if its words already fit the narrower column.
+        if (shown == null || !key.equals(lyricsKey) || lyrics != null || result == null || result.lyrics == null) return;
+        float sourceWidth = source.getVisibility() == View.VISIBLE ? px(44) : 0;
+        if (!StandbyLyric.fitsBeside(title.getPaint().measureText(title.getText().toString()),
+                sourceWidth + second.getPaint().measureText(second.getText().toString()), px(560))) {
+            return;
+        }
+        lyrics = result.lyrics;
+        setColumns(true);
+    }
+
+    /** The lyrics of this song are known (found, or known to be missing), so the row can be drawn for good. */
+    private boolean lyricsSettled(NowPlayingFeed.Track t) {
+        return lookup == null || t.lyricsKey == null || LrcLib.CACHE.containsKey(t.lyricsKey);
+    }
+
+    /** Two columns (the song at 560 px, the line beside it) for a song with synced lyrics; one at 1040 otherwise. */
+    private void setColumns(boolean two) {
+        title.setMaxWidth(px(two ? 560 : 1040));
+        second.setMaxWidth(px(two ? 560 : 1040));
+        lyric.setVisibility(two ? View.VISIBLE : View.GONE);
+    }
+
+    /** Puts the line being sung in the column: out over 150 ms, then the new one in over 250, in place. */
+    private void updateLyric() {
+        if (lyrics == null || shown == null || !shown.playing || !musicShown) return;
+        int want = StandbyLyric.lineAt(lyrics, feed.positionAt(SystemClock.elapsedRealtime()), lyricShown);
+        if (want == lyricShown) return;
+        lyricShown = want;
+        String text = want < 0 ? null : lyrics.line(want);
+        lyric.animate().cancel();
+        if (SystemClock.elapsedRealtime() < lyricInstantUntil) {
+            lyricInstantUntil = -1;
+            lyric.setText(text);
+            lyric.setAlpha(text == null ? 0f : 1f);
+            return;
+        }
+        Runnable in = () -> {
+            lyric.setText(text);
+            if (text != null) {
+                lyric.animate().alpha(1f).setDuration(250).setInterpolator(new DecelerateInterpolator()).start();
+            }
+        };
+        if (lyric.getAlpha() <= 0f) in.run();
+        else lyric.animate().alpha(0f).setDuration(150).setInterpolator(new AccelerateInterpolator())
+                .withEndAction(in).start();
     }
 
     /** The row as it was on the face this one takes over from: no slide, no fade. */
@@ -463,7 +607,15 @@ final class StandbyScene {
             clock.setLayoutParams(lp);
             clock.setTranslationY(0f);
         };
-        if (!on) shown = null;
+        if (!on) {
+            shown = null;
+            // The next song (or this one again) starts its lyrics afresh.
+            lyricsKey = null;
+            lyrics = null;
+            lyricShown = -1;
+            lyric.animate().cancel();
+            lyric.setAlpha(0f);
+        }
         row.animate().cancel();
         animateGlow(on ? 1f : 0f, on ? 300 : 0, on ? 500 : 400);
         if (on) {

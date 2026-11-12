@@ -53,6 +53,7 @@ import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
 import android.util.TypedValue;
+import android.view.FocusFinder;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
@@ -2529,7 +2530,17 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 nowPlaying.focus();                       // dock row: the Now Playing panel is right above
                 return true;
             }
-            if (position < COLUMNS) return false;          // dock row: let focus move to the top bar
+            if (position < COLUMNS) {
+                // Dock row: let focus move to the top bar, but Up never lands on the Night Clock (Left reaches it).
+                View current = getCurrentFocus();
+                if (nightClock == null || current == null
+                        || FocusFinder.getInstance().findNextFocus(root, current, View.FOCUS_UP) != nightClock) {
+                    return false;
+                }
+                (btnInputs.getVisibility() == View.VISIBLE ? btnInputs : firstTopButton()).requestFocus();
+                grid.playSoundEffect(SoundEffectConstants.NAVIGATION_UP);
+                return true;
+            }
             target = position - COLUMNS;
         } else {
             int lastRowStart = ((count - 1) / COLUMNS) * COLUMNS;

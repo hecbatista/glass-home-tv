@@ -24,8 +24,8 @@ import java.util.Date;
 
 /**
  * Glass Home's "Alarm and Sleep" screen (alarm_clock, sleep_mode), opened from Customize Home: the alarm and its
- * time, Repeat, the sunrise's length, the sound, a test, and the Sleep Mode switch. Styled like Customize Home
- * (GlassSettings). The time is edited inside its own row: OK, then Up and Down per segment, OK saves.
+ * time, Repeat, the sunrise's length, the sound, a test, the Sleep Mode switch and Screensaver Lyrics. Styled like
+ * Customize Home (GlassSettings). The time is edited inside its own row: OK, then Up and Down per segment, OK saves.
  */
 public final class AlarmSettingsActivity extends Activity {
     private static final int[] REPEAT_LABELS = {R.string.alarm_every_day, R.string.alarm_weekdays,
@@ -38,7 +38,9 @@ public final class AlarmSettingsActivity extends Activity {
     private float density;
     private boolean light, use24;
 
-    private TextView alarmRow, timeHint, sleepRow, sleepHint;
+    private TextView alarmRow, timeHint, sleepRow, sleepHint, lyricsRow;
+    /** Screensaver Lyrics' default (config standby_lyrics) until the switch is used. */
+    private boolean lyricsDefault;
     private LinearLayout timeRow, segments;
     private TextView timeValue;
     private TextView[] segment;
@@ -157,6 +159,26 @@ public final class AlarmSettingsActivity extends Activity {
         glass.hint(sleepHint);
         sleepHint.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f);
         sleepHint.setVisibility(cfg.sleepMode ? View.VISIBLE : View.GONE);
+
+        // Screensaver Lyrics: the line being sung beside the song on the StandBy face, the screen's last row.
+        lyricsDefault = cfg.standbyLyrics;
+        boolean lyricsOffered = cfg.lyrics && cfg.standbyClock;
+        lyricsRow = add(content, 18);
+        glass.rowPill(lyricsRow, false);
+        lyricsRow.setOnClickListener(v -> {
+            prefs.edit().putBoolean(StandbyLyric.KEY, !prefs.getBoolean(StandbyLyric.KEY, lyricsDefault)).apply();
+            refresh();
+        });
+        lyricsRow.setVisibility(lyricsOffered ? View.VISIBLE : View.GONE);
+        lyricsRow.setOnFocusChangeListener((v, focused) -> {
+            if (focused) scroll.post(() -> scroll.smoothScrollTo(0, content.getHeight()));
+        });
+        TextView lyricsHint = new TextView(this);
+        content.addView(lyricsHint, hintLp(7));
+        glass.hint(lyricsHint);
+        lyricsHint.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f);
+        lyricsHint.setText(R.string.standby_lyrics_hint);
+        lyricsHint.setVisibility(lyricsOffered ? View.VISIBLE : View.GONE);
         return scroll;
     }
 
@@ -232,6 +254,8 @@ public final class AlarmSettingsActivity extends Activity {
         label(soundChoices, sound, AlarmScheduler.sound(this));
         boolean sleep = prefs.getBoolean(HomeKeyService.SLEEP_KEY, false);
         sleepRow.setText(getString(R.string.sleep_mode_state, getString(sleep ? R.string.on : R.string.off)));
+        boolean lyrics = prefs.getBoolean(StandbyLyric.KEY, lyricsDefault);
+        lyricsRow.setText(getString(R.string.standby_lyrics_state, getString(lyrics ? R.string.on : R.string.off)));
         sleepHint.setText(HomeKeyService.isRunning() && Settings.canDrawOverlays(this) ? sleepHintText()
                 : getString(R.string.sleep_mode_needs));
     }

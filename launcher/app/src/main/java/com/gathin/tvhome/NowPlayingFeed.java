@@ -12,6 +12,7 @@ import android.media.session.PlaybackState;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.text.TextUtils;
 
 import java.io.InputStream;
@@ -35,13 +36,24 @@ final class NowPlayingFeed {
         final boolean playing;
         /** SpotifyPlayback.sourceIcon's name: "tv" for a session on this TV. */
         final String source;
+        /** For the lyrics: the Now Playing panel's key for this song (LrcLib.CACHE), its album and length (0: unknown). */
+        final String lyricsKey, album;
+        final long durationMs;
 
         Track(String title, String artist, Bitmap cover, boolean playing, String source) {
+            this(title, artist, cover, playing, source, null, "", 0);
+        }
+
+        Track(String title, String artist, Bitmap cover, boolean playing, String source, String lyricsKey,
+              String album, long durationMs) {
             this.title = title;
             this.artist = artist;
             this.cover = cover;
             this.playing = playing;
             this.source = source;
+            this.lyricsKey = lyricsKey;
+            this.album = album == null ? "" : album;
+            this.durationMs = durationMs;
         }
 
         boolean sameAs(Track o) {
@@ -74,6 +86,10 @@ final class NowPlayingFeed {
     private Bitmap remoteArt;
     private Track last;
     private boolean started;
+    /** Where the song shown is now: the session's last position, or Spotify's as of its last answer. */
+    private final PlaybackClock clock = new PlaybackClock();
+    /** When the last Spotify answer arrived (elapsedRealtime). */
+    private long remoteAt;
 
     private final MediaSessionManager.OnActiveSessionsChangedListener changed = this::pick;
     private final MediaController.Callback callback = new MediaController.Callback() {
@@ -122,6 +138,11 @@ final class NowPlayingFeed {
             poller = null;
         }
         main.removeCallbacksAndMessages(null);
+    }
+
+    /** The song shown's position now, in ms, from its player's last report. */
+    long positionAt(long elapsedRealtime) {
+        return clock.positionAt(elapsedRealtime);
     }
 
     /**
@@ -203,7 +224,9 @@ final class NowPlayingFeed {
         if (remoteShown && remote != null) {
             t = new Track(remote.title, remote.artist.isEmpty() ? remote.device : remote.artist,
                     remote.artUrl != null && remote.artUrl.equals(remoteArtUrl) ? remoteArt : null, remote.playing,
-                    remote.sourceIcon());
+                    remote.sourceIcon(), "spotify\n" + remote.itemId + "\n" + remote.title, remote.album,
+                    remote.durationMs);
+            clock.set(remote.progressMs, remoteAt, remote.playing ? 1f : 0f);
         } else if (controller != null && NowPlayingChoice.visible(new NowPlayingChoice.Session(
                 controller.getSessionToken(), stateOf(controller), titleOf(controller) != null))) {
             MediaMetadata m = controller.getMetadata();
@@ -211,8 +234,17 @@ final class NowPlayingFeed {
             if (TextUtils.isEmpty(by)) by = m.getText(MediaMetadata.METADATA_KEY_ALBUM_ARTIST);
             if (TextUtils.isEmpty(by) && m.getDescription() != null) by = m.getDescription().getSubtitle();
             int state = stateOf(controller);
-            t = new Track(titleOf(controller), by == null ? "" : by.toString(), coverOf(m),
-                    state == PlaybackState.STATE_PLAYING || state == PlaybackState.STATE_BUFFERING, "tv");
+            // The panel's lyrics key: the package, the title and the artist line, as it builds them.
+            String song = titleOf(controller);
+            t = new Track(song, by == null ? "" : by.toString(), coverOf(m),
+                    state == PlaybackState.STATE_PLAYING || state == PlaybackState.STATE_BUFFERING, "tv",
+                    controller.getPackageName() + "\n" + song + "\n" + by, m.getString(MediaMetadata.METADATA_KEY_ALBUM),
+                    m.getLong(MediaMetadata.METADATA_KEY_DURATION));
+            PlaybackState ps = controller.getPlaybackState();
+            if (ps != null) {
+                clock.set(ps.getPosition(), ps.getLastPositionUpdateTime(),
+                        state == PlaybackState.STATE_PLAYING ? ps.getPlaybackSpeed() : 0f);
+            }
         }
         if (t == null ? last == null : t.sameAs(last)) return;
         last = t;
@@ -229,6 +261,7 @@ final class NowPlayingFeed {
         main.post(() -> {
             if (!started) return;
             remote = p;
+            remoteAt = SystemClock.elapsedRealtime();
             if (url != null && !url.equals(remoteArtUrl)) {
                 remoteArtUrl = url;
                 remoteArt = cover;

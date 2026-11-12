@@ -196,6 +196,11 @@ final class Config {
     boolean sleepMode;
     /** standby_clock: the screensaver is StandbyScene instead of ClockScene. Glass Home only. */
     boolean standbyClock;
+    /**
+     * standby_lyrics: the default of Screensaver Lyrics (the line being sung beside the song on the StandBy face);
+     * the Alarm and Sleep screen's switch overrides it (StandbyLyric.enabled).
+     */
+    boolean standbyLyrics;
     /** home_awake_minutes (HomeAwake): how long Home keeps the screen on; 0 leaves it to the TV. Glass Home only. */
     int homeAwakeMinutes;
 
@@ -369,6 +374,7 @@ final class Config {
         boolean alarmClock = res.getBoolean(R.bool.alarm_clock);
         boolean sleepMode = res.getBoolean(R.bool.sleep_mode);
         boolean standbyClock = res.getBoolean(R.bool.standby_clock);
+        boolean standbyLyrics = res.getBoolean(R.bool.standby_lyrics);
         int homeAwake = res.getInteger(R.integer.home_awake_minutes);
         // Glass Home's dark background is a soft near-black rather than pure black.
         if (glassHome) background = Appearance.DARK;
@@ -459,6 +465,7 @@ final class Config {
             alarmClock = bool(json, "alarm_clock", alarmClock);
             sleepMode = bool(json, "sleep_mode", sleepMode);
             standbyClock = bool(json, "standby_clock", standbyClock);
+            standbyLyrics = bool(json, "standby_lyrics", standbyLyrics);
             homeAwake = integer(json, "home_awake_minutes", homeAwake, HomeAwake.ALWAYS, 24 * 60);
         }
         // A theme push or reset invalidates choices made on the TV. On first use, remember the
@@ -525,6 +532,7 @@ final class Config {
         cfg.alarmClock = cfg.glassHome && alarmClock;
         cfg.sleepMode = cfg.glassHome && sleepMode;
         cfg.standbyClock = cfg.glassHome && standbyClock;
+        cfg.standbyLyrics = standbyLyrics;
         cfg.homeAwakeMinutes = cfg.glassHome ? HomeAwake.chosen(choices.getInt(HomeAwake.KEY, Integer.MIN_VALUE), homeAwake) : 0;
         return cfg;
     }

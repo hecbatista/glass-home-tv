@@ -27,7 +27,7 @@ public class ClockActivity extends Activity {
         Config cfg = Config.load(this);
         if (cfg.standbyClock) {
             standby = new StandbyScene(this, getWindow(), cfg.spotifyConnect, cfg.animations && !cfg.reducedMotion,
-                    this::finish);
+                    StandbyLyric.enabled(this, cfg), this::finish);
             setContentView(standby.view());
         } else {
             setContentView(R.layout.dream_clock);

@@ -117,10 +117,6 @@ final class NowPlayingPanel {
     private Lyrics lyrics;
     /** The lookup for the song now showing has finished, so no lyrics means it has none. */
     private boolean lyricsKnown;
-    /** Lookups already made, by song: synced lyrics, or none (so a song without them is not asked again). */
-    private final Map<String, LrcLib.Result> lyricsCache = new java.util.LinkedHashMap<String, LrcLib.Result>(32, 0.75f, true) {
-        @Override protected boolean removeEldestEntry(Map.Entry<String, LrcLib.Result> e) { return size() > 40; }
-    };
     private final PlaybackClock clock = new PlaybackClock();
     /** The full-screen lyrics (LyricsScreen), opened with OK on the cover; null without lyrics. */
     private final LyricsScreen screen;
@@ -819,7 +815,7 @@ final class NowPlayingPanel {
         lyricsKey = key;
         lyricsKnown = false;
         showLyrics(null);
-        LrcLib.Result cached = lyricsCache.get(key);
+        LrcLib.Result cached = LrcLib.CACHE.get(key);
         if (cached != null) {
             lyricsKnown = true;
             showLyrics(cached.lyrics);
@@ -835,7 +831,7 @@ final class NowPlayingPanel {
             }
             final LrcLib.Result result = found;
             main.post(() -> {
-                if (result != null) lyricsCache.put(key, result);
+                if (result != null) LrcLib.CACHE.put(key, result);
                 if (!key.equals(lyricsKey)) return;
                 lyricsKnown = true;
                 showLyrics(result == null ? null : result.lyrics);

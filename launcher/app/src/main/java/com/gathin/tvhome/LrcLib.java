@@ -37,6 +37,15 @@ final class LrcLib {
         static final Result NONE = new Result(null, false);
     }
 
+    /**
+     * Lookups already made, by song key (the player and the song, as the Now Playing panel keys them): synced lyrics,
+     * or none, so a song without them is not asked again. Shared by the panel and the StandBy face, so a song looked
+     * up on Home costs the screensaver nothing. Main thread only.
+     */
+    static final Map<String, Result> CACHE = new LinkedHashMap<String, Result>(32, 0.75f, true) {
+        @Override protected boolean removeEldestEntry(Map.Entry<String, Result> e) { return size() > 40; }
+    };
+
     private final String base;
     private final SpotifyApi.Transport transport;
 

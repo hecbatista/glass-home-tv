@@ -76,6 +76,11 @@ code wins if they disagree; then fix this file. All positions are TV px on the 1
 - **Monochrome tinted screens** (StandBy's night red): captions use 100% of the tint colour, not 62%, which falls to
   1.8:1; size carries the hierarchy. StandBy clock: Inter Display SemiBold 600 px, proportional digits, centred, cap
   top y 268; captions 40 px caps at baseline y 160 (`AlarmActivity`, `Sunrise` keyframes).
+- **StandBy lyrics (Screensaver Lyrics, off by default):**
+  - The bottom row splits into two columns: the song at x 384–944 and the current line at x 1008–1808.
+  - The line is 40 px Inter SemiBold, at most 2 lines, on the row's baselines 852 and 900.
+  - It changes by fading out over 150 ms, then in over 250 ms (`standby-lyrics.md`).
+  - Text that wraps uses balanced line breaks and no hyphenation.
 - **Time picker:** edited in place in its row pill, with segments as 64 px capsules (active #111216 on the white pill),
   Up/Down to change and OK to save (`AlarmSettingsActivity`).
 - **Light tiles:** a 1.5 px hairline at 10% ink and a soft shadow, so white banners stay visible on Light.

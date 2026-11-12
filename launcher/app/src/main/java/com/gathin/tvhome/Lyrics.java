@@ -80,6 +80,11 @@ final class Lyrics {
         return lines.length;
     }
 
+    /** When line {@code i} starts, in ms into the song. */
+    long time(int i) {
+        return times[i];
+    }
+
     String line(int i) {
         return i >= 0 && i < lines.length ? lines[i] : "";
     }

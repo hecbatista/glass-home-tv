@@ -199,6 +199,9 @@
     <!-- %1$s is replaced by the remote's Menu glyph (Material Symbols "menu"), drawn inline. -->
     <string name="sleep_mode_hint" formatted="false">Hold %1$s for a second in any app to dim the screen. The show keeps playing. Press any button to bring the picture back.</string>
     <string name="sleep_mode_needs">Needs Glass Home\'s remote helper and the draw-over-apps permission, set once over ADB.</string>
+    <!-- Glass Home: the Alarm and Sleep screen's last row (standby_lyrics) and the hint under it. -->
+    <string name="standby_lyrics_state">Screensaver Lyrics: %1$s</string>
+    <string name="standby_lyrics_hint">Shows the line being sung beside the song, on the screensaver and the Night Clock.</string>
     <!-- Glass Home: the round button beside Settings, the label shown under it when focused and the title of the
          Launcher settings screen it opens. -->
     <string name="appearance">Customize Home</string>
